@@ -19,7 +19,7 @@ export default function AgentCard({ agent }: { agent: agent }) {
         backgroundColor: "#ffffff",
         borderRadius: 18,
         padding: 16,
-        minHeight: 210, // fixed height for equal grid
+        minHeight: 210,
         justifyContent: "space-between",
         shadowColor: "#000",
         shadowOpacity: 0.06,
@@ -39,7 +39,7 @@ export default function AgentCard({ agent }: { agent: agent }) {
       </Text>
 
       <Image
-        source={agent.image}
+        source={agent.image}   // <-- FIXED (no fallback)
         style={{
           width: 90,
           height: 90,
