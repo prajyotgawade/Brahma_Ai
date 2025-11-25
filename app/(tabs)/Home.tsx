@@ -17,11 +17,15 @@ export default function Home() {
     navigation.setOptions({
       headerShown: true,
       headerTitle: () => (
-        <Text style={{ fontWeight: "bold", fontSize: 18 }}>Brahma AI</Text>
+        <Text style={{ fontWeight: "800", fontSize: 22, color: "#fff" }}>
+          Brahma AI
+        </Text>
       ),
       headerTitleAlign: "center",
+      headerStyle: {
+        backgroundColor: "#6D4AFF",
+      },
 
-      // LEFT PRO BUTTON
       headerLeft: () => (
         <TouchableOpacity
           style={{
@@ -42,7 +46,6 @@ export default function Home() {
         </TouchableOpacity>
       ),
 
-      // RIGHT SETTINGS BUTTON
       headerRight: () => (
         <TouchableOpacity style={{ marginRight: 12, padding: 6 }}>
           <Image
@@ -55,18 +58,19 @@ export default function Home() {
   }, [navigation]);
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <View style={{ padding: 15 }}>
-        {/* Featured Agent Cards */}
-        <AgentListComponent isFeatured={true} />
+    <ScrollView
+      style={{ flex: 1, backgroundColor: "#EEF2FF" }}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: 120 }}
+    >
+      <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+        <AgentListComponent type="featured" />
 
-        {/* Full Width Banner */}
         <CreateAgentBanner
-         // onPress={() => navigation.navigate("CreateAgentScreen")}
+          onPress={() => navigation.navigate("CreateAgentScreen" as never)}
         />
 
-        {/* Non Featured Agent Cards */}
-        <AgentListComponent isFeatured={false} />
+        <AgentListComponent type="nonfeatured" />
       </View>
     </ScrollView>
   );

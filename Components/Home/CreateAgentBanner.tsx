@@ -1,51 +1,30 @@
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
-type Props = {
-  onPress?: () => void;
-};
-
-export default function CreateAgentBanner({ onPress }: Props) {
+export default function CreateAgentBanner({ onPress }: { onPress?: () => void }) {
   return (
     <View
       style={{
-        width: "100%",
-        backgroundColor: "#28A9FF",
-        borderRadius: 18,
-        padding: 15,
-        marginVertical: 15,
+        backgroundColor: "#6D4AFF",
+        borderRadius: 24,
+        padding: 20,
+        marginVertical: 20,
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 4,
+        elevation: 6,
       }}
     >
-      {/* Left Image */}
       <Image
         source={require("../../assets/images/Agent_img/agentGroup.png")}
-        style={{
-          width: 130,
-          height: 130,
-          resizeMode: "contain",
-        }}
+        style={{ width: 120, height: 120, resizeMode: "contain" }}
       />
 
-      {/* Right Content */}
       <View style={{ flex: 1, marginLeft: 10 }}>
-        <Text
-          style={{
-            color: "white",
-            fontSize: 20,
-            fontWeight: "800",
-          }}
-        >
+        <Text style={{ color: "white", fontSize: 22, fontWeight: "800" }}>
           Create Your Own Agent
         </Text>
 
-        <Text style={{ color: "white", marginTop: 4 }}>
+        <Text style={{ color: "#e8e8e8", marginTop: 4, fontSize: 14 }}>
           Customize your personal AI assistant
         </Text>
 
@@ -54,19 +33,13 @@ export default function CreateAgentBanner({ onPress }: Props) {
           style={{
             marginTop: 14,
             backgroundColor: "white",
-            paddingVertical: 8,
-            paddingHorizontal: 20,
-            borderRadius: 10,
+            paddingVertical: 10,
+            borderRadius: 14,
             alignSelf: "flex-start",
+            paddingHorizontal: 26,
           }}
         >
-          <Text
-            style={{
-              color: "#007BFF",
-              fontSize: 16,
-              fontWeight: "700",
-            }}
-          >
+          <Text style={{ color: "#6D4AFF", fontSize: 16, fontWeight: "700" }}>
             Create
           </Text>
         </TouchableOpacity>

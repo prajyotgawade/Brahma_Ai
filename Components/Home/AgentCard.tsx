@@ -6,76 +6,47 @@ export type agent = {
   name: string;
   desc: string;
   image: any;
-  initialText: string;   // <- FIX: match the Agents array casing
+  initialText: string;
   prompt: string;
   type: string;
   featured?: boolean;
 };
 
-export type Props = {
-  agent: agent;
-};
-
-export default function AgentCard({ agent }: Props) {
+export default function AgentCard({ agent }: { agent: agent }) {
   return (
     <View
       style={{
-        backgroundColor: "white",
-        borderRadius: 10,
-        minHeight: 190,
-        marginVertical: 10,
-        paddingBottom: 10,
-        position: "relative",
-        overflow: "hidden",
+        backgroundColor: "#ffffff",
+        borderRadius: 18,
+        padding: 16,
+        minHeight: 210, // fixed height for equal grid
+        justifyContent: "space-between",
+        shadowColor: "#000",
+        shadowOpacity: 0.06,
+        shadowRadius: 5,
+        elevation: 4,
       }}
     >
-      {/* Text Section */}
-      <View
-        style={{
-          padding: 10,
-        }}
+      <Text style={{ fontSize: 18, fontWeight: "800", color: "#222" }}>
+        {agent.name}
+      </Text>
+
+      <Text
+        numberOfLines={2}
+        style={{ color: "#6e6e6e", marginTop: 6, fontSize: 14 }}
       >
-        <Text
-          style={{
-            fontSize: 20,
-            fontWeight: "bold",
-          }}
-        >
-          {agent.name}
-        </Text>
+        {agent.desc}
+      </Text>
 
-        <Text
-          numberOfLines={2}
-          style={{
-            color: "gray",
-            marginTop: 1,
-          }}
-        >
-          {agent.desc}
-        </Text>
-      </View>
-
-      {/* Bottom-Right Positioned Image */}
-      {agent.image && (
-        <View
-          style={{
-            position: "absolute",
-            right: 0,
-            bottom: 0,
-            width: 90,
-            height: 90,
-          }}
-        >
-          <Image
-            source={agent.image}
-            style={{
-              width: "100%",
-              height: "100%",
-              resizeMode: "contain",
-            }}
-          />
-        </View>
-      )}
+      <Image
+        source={agent.image}
+        style={{
+          width: 90,
+          height: 90,
+          alignSelf: "center",
+          resizeMode: "contain",
+        }}
+      />
     </View>
   );
 }
