@@ -1,8 +1,9 @@
 import { useKeyboard } from "@react-native-community/hooks";
-import { useNavigation } from '@react-navigation/native';
-import { useLocalSearchParams } from 'expo-router';
-import { Image as ImageIcon, Plus, Send } from 'lucide-react-native';
-import React, { useEffect, useRef, useState } from 'react';
+import { useNavigation } from "@react-navigation/native";
+import * as Clipboard from "expo-clipboard";
+import { useLocalSearchParams } from "expo-router";
+import { Copy, Image as ImageIcon, Plus, Send } from "lucide-react-native";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
@@ -11,30 +12,30 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AIChatModel } from "../shared/GlobalApi";
 
-// FIXED: Use `content` for all messages
-const initialMessages = [
-  { role: 'user', content: 'Hi there! 👋' },
-  { role: 'assistant', content: 'Hello! How can I help you today? 😊' },
-  { role: 'user', content: 'Hi there! 👋' },
-  { role: 'assistant', content: 'Hello! How can I help you today? 😊' },
-];
+type Message = {
+  role: string;
+  content: string;
+};
 
 export default function ChatUI() {
   const navigation = useNavigation();
-  const { agentName } = useLocalSearchParams();
+  const { agentName, agentPrompt } = useLocalSearchParams();
 
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [copiedMsg, setCopiedMsg] = useState<string | null>(null);
 
   const flatListRef = useRef<FlatList>(null);
   const bottomAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const keyboard = useKeyboard();
 
-  // Header Setup
+  // HEADER
   useEffect(() => {
     navigation.setOptions({
       headerShown: true,
@@ -43,17 +44,53 @@ export default function ChatUI() {
     });
   }, []);
 
-  // SEND MESSAGE FIXED
-  const onSendMessage = () => {
-    if (!inputText.trim()) return;
+  // INITIAL SYSTEM PROMPT
+  useEffect(() => {
+    if (agentPrompt) {
+      setMessages([{ role: "system", content: agentPrompt as string }]);
+    }
+  }, [agentPrompt]);
 
-    const newMsg = { role: "user", content: inputText };
-    setMessages(prev => [...prev, newMsg]);
-    setInputText("");
-
+  // COPY TO CLIPBOARD
+  const copyToClipboard = (text: string) => {
+    Clipboard.setStringAsync(text);
+    setCopiedMsg(text);
+    setTimeout(() => setCopiedMsg(null), 1500);
   };
 
-  // Keyboard animation fix
+  // SEND MESSAGE FUNCTION
+  const onSendMessage = async () => {
+    const trimmedText = inputText.trim();
+    if (!trimmedText) return;
+
+    const userMessage: Message = { role: "user", content: trimmedText };
+    setMessages((prev) => [...prev, userMessage]);
+    setInputText("");
+
+    setIsTyping(true);
+
+    try {
+      const allMessages = [...messages, userMessage];
+      const result = await AIChatModel(allMessages);
+
+      if (result && result.aiResponse) {
+        const aiMessage: Message = {
+          role: "assistant",
+          content:
+            typeof result.aiResponse === "string"
+              ? result.aiResponse
+              : result.aiResponse.content,
+        };
+        setMessages((prev) => [...prev, aiMessage]);
+      }
+    } catch (err) {
+      console.log("AI error:", err);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  // BOTTOM BAR ANIMATION
   useEffect(() => {
     Animated.timing(bottomAnim, {
       toValue: keyboard.keyboardShown ? keyboard.keyboardHeight : 0,
@@ -62,41 +99,73 @@ export default function ChatUI() {
     }).start();
   }, [keyboard.keyboardShown, keyboard.keyboardHeight]);
 
-  // Scroll bottom on new message
+  // AUTO-SCROLL
   useEffect(() => {
     flatListRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isTyping]);
 
   return (
     <View style={styles.container}>
-
       <FlatList
         ref={flatListRef}
         data={messages}
         keyExtractor={(_, index) => index.toString()}
-        contentContainerStyle={{ padding: 15, paddingBottom: 130 }}
-        renderItem={({ item }) => (
-          <View
-            style={[
-              styles.messageContainer,
-              item.role === "user"
-                ? styles.userMessage
-                : styles.assistantMessage,
-            ]}
-          >
-            <Text
+        contentContainerStyle={{ padding: 12, paddingTop: 16, paddingBottom: 120 }}
+        renderItem={({ item }: { item: Message }) => {
+          if (item.role === "system") return null;
+
+          return (
+            <View
               style={[
-                styles.messageText,
+                styles.messageContainer,
                 item.role === "user"
-                  ? { color: "#fff" }
-                  : { color: "#111" },
+                  ? styles.userMessage
+                  : styles.assistantMessage,
               ]}
             >
-              {item.content}
+              <Text
+                style={[
+                  styles.messageText,
+                  item.role === "user" ? { color: "#fff" } : { color: "#111" },
+                ]}
+              >
+                {item.content}
+              </Text>
+
+              {/* Copy icon at bottom-right corner for AI messages */}
+              {item.role === "assistant" && (
+                <TouchableOpacity
+                  style={styles.copyIconBottomRight}
+                  onPress={() => copyToClipboard(item.content)}
+                >
+                  <Copy size={16} color="#555" />
+                </TouchableOpacity>
+              )}
+            </View>
+          );
+        }}
+        ListFooterComponent={
+          isTyping ? (
+            <Text
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 4,
+                color: "#555",
+                fontStyle: "italic",
+              }}
+            >
+              AI is typing...
             </Text>
-          </View>
-        )}
+          ) : null
+        }
       />
+
+      {/* COPIED TOAST */}
+      {copiedMsg && (
+        <View style={styles.toast}>
+          <Text style={{ color: "#fff" }}>Message copied to clipboard</Text>
+        </View>
+      )}
 
       {/* BOTTOM CHAT BAR */}
       <Animated.View
@@ -121,7 +190,6 @@ export default function ChatUI() {
           <Send size={20} color="#fff" />
         </TouchableOpacity>
       </Animated.View>
-
     </View>
   );
 }
@@ -134,6 +202,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     marginVertical: 6,
     maxWidth: "78%",
+    position: "relative", // allow absolute positioning inside
   },
 
   userMessage: {
@@ -159,6 +228,12 @@ const styles = StyleSheet.create({
   },
 
   messageText: { fontSize: 15.5, lineHeight: 20 },
+
+  copyIconBottomRight: {
+    position: "absolute",
+    bottom: 4,
+    right: 6,
+  },
 
   bottomBar: {
     position: "absolute",
@@ -191,5 +266,18 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  toast: {
+    position: "absolute",
+    bottom: 80,
+    left: 50,
+    right: 50,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: "#333",
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
