@@ -3,6 +3,7 @@ import { useNavigation } from "@react-navigation/native";
 import * as Clipboard from "expo-clipboard";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams } from "expo-router";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { Copy, Image as ImageIcon, Plus, Send, X } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -16,11 +17,12 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { storage } from "../../config/Firebaseconfig";
 import { AIChatModel } from "../shared/GlobalApi";
 
 type Message = {
   role: string;
-  content: string;
+  content: any;
   image?: string;
 };
 
@@ -54,7 +56,7 @@ export default function ChatUI() {
   // INITIAL SYSTEM PROMPT
   useEffect(() => {
     if (agentPrompt) {
-      setMessages([{ role: "system", content: agentPrompt as string }]);
+      setMessages([{ role: "system", content: agentPrompt }]);
     }
   }, [agentPrompt]);
 
@@ -69,6 +71,20 @@ export default function ChatUI() {
       setSelectedImage(result.assets[0].uri);
     }
   };
+
+  // UPLOAD IMAGE
+  const uploadImageToStorage = async (file: string) => {
+    const response = await fetch(file);
+    const blobFile = await response.blob();
+
+    // ALWAYS CORRECT PATH
+    const path = `BrahmaAi/${Date.now()}.png`;
+    const imageRef = ref(storage, path);
+
+    await uploadBytes(imageRef, blobFile);
+    return await getDownloadURL(imageRef);
+  };
+
 
   // COPY MESSAGE
   const copyToClipboard = (text: string) => {
@@ -101,31 +117,46 @@ export default function ChatUI() {
     const trimmedText = inputText.trim();
     if (!trimmedText && !selectedImage) return;
 
+    let content: any = [];
+
+    if (trimmedText) {
+      content.push({ type: "text", text: trimmedText });
+    }
+
+    let uploadedImageUrl = null;
+
+    if (selectedImage) {
+      uploadedImageUrl = await uploadImageToStorage(selectedImage);
+      content.push({
+        type: "image_url",
+        image_url: { url: uploadedImageUrl },
+      });
+    }
+
     const userMessage: Message = {
       role: "user",
-      content: trimmedText,
+      content,
       image: selectedImage || undefined,
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInputText("");
     setSelectedImage(null);
+    setInputText("");
     setIsTyping(true);
 
     try {
       const result = await AIChatModel([...messages, userMessage]);
 
       if (result && result.aiResponse) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content:
-              typeof result.aiResponse === "string"
-                ? result.aiResponse
-                : result.aiResponse.content,
-          },
-        ]);
+        const assistantMsg: Message = {
+          role: "assistant",
+          content:
+            typeof result.aiResponse === "string"
+              ? [{ type: "text", text: result.aiResponse }]
+              : result.aiResponse.content,
+        };
+
+        setMessages((prev) => [...prev, assistantMsg]);
       }
     } catch (err) {
       console.log("AI error:", err);
@@ -134,7 +165,7 @@ export default function ChatUI() {
     }
   };
 
-  // BOTTOM SPACING ANIMATION
+  // AUTO BOTTOM SPACING
   useEffect(() => {
     Animated.timing(bottomAnim, {
       toValue: keyboard.keyboardShown ? keyboard.keyboardHeight : 0,
@@ -163,6 +194,13 @@ export default function ChatUI() {
         renderItem={({ item }) => {
           if (item.role === "system") return null;
 
+          const firstText =
+            item.content?.find?.((c: any) => c.type === "text")?.text || "";
+
+          const firstImage =
+            item.content?.find?.((c: any) => c.type === "image_url")
+              ?.image_url?.url || null;
+
           return (
             <View
               style={[
@@ -172,9 +210,9 @@ export default function ChatUI() {
                   : styles.assistantMessage,
               ]}
             >
-              {item.image && (
+              {firstImage && (
                 <Image
-                  source={{ uri: item.image }}
+                  source={{ uri: firstImage }}
                   style={{
                     width: 160,
                     height: 160,
@@ -184,19 +222,21 @@ export default function ChatUI() {
                 />
               )}
 
-              <Text
-                style={[
-                  styles.messageText,
-                  item.role === "user" ? { color: "#fff" } : { color: "#111" },
-                ]}
-              >
-                {item.content}
-              </Text>
+              {firstText ? (
+                <Text
+                  style={[
+                    styles.messageText,
+                    item.role === "user" ? { color: "#fff" } : { color: "#111" },
+                  ]}
+                >
+                  {firstText}
+                </Text>
+              ) : null}
 
-              {item.role === "assistant" && (
+              {item.role === "assistant" && firstText !== "" && (
                 <TouchableOpacity
                   style={styles.copyIconBottomRight}
-                  onPress={() => copyToClipboard(item.content)}
+                  onPress={() => copyToClipboard(firstText)}
                 >
                   <Copy size={16} color="#555" />
                 </TouchableOpacity>
@@ -220,7 +260,7 @@ export default function ChatUI() {
         }
       />
 
-      {/* IMAGE PREVIEW ABOVE INPUT BAR */}
+      {/* IMAGE PREVIEW */}
       {selectedImage && (
         <Animated.View
           style={[
@@ -289,7 +329,7 @@ export default function ChatUI() {
   );
 }
 
-/* 🔥 ONLY the required style fixes made */
+/* 🔥 SAME CSS – NOT CHANGED */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#EEF1F6" },
 
@@ -379,7 +419,6 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
 
-  /* 🔥 FIXED ONLY THIS PART */
   imagePreviewBox: {
     position: "absolute",
     left: 12,
@@ -397,7 +436,6 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
 
-  /* 🔥 FIXED marginRight from 60 → 12 */
   imagePreview: {
     width: 60,
     height: 60,
