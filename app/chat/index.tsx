@@ -1,8 +1,10 @@
+import { useUser } from "@clerk/clerk-expo";
 import { useKeyboard } from "@react-native-community/hooks";
 import { useNavigation } from "@react-navigation/native";
 import * as Clipboard from "expo-clipboard";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams } from "expo-router";
+import { doc, setDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { Copy, Image as ImageIcon, Plus, Send, X } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
@@ -17,18 +19,18 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { storage } from "../../config/Firebaseconfig";
+import { firestoreDb, storage } from "../../config/Firebaseconfig";
 import { AIChatModel } from "../shared/GlobalApi";
 
 type Message = {
   role: string;
-  content: any;
+  content: any[];
   image?: string;
 };
 
 export default function ChatUI() {
   const navigation = useNavigation();
-  const { agentName, agentPrompt } = useLocalSearchParams();
+  const { agentName, agentPrompt, agentId, chatId } = useLocalSearchParams();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
@@ -43,8 +45,13 @@ export default function ChatUI() {
   const bottomAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const keyboard = useKeyboard();
+  const { user } = useUser();
 
-  // HEADER
+  const [docId] = useState<string>(
+    typeof chatId === "string" ? chatId : Date.now().toString()
+  );
+
+  /* HEADER */
   useEffect(() => {
     navigation.setOptions({
       headerShown: true,
@@ -53,17 +60,17 @@ export default function ChatUI() {
     });
   }, []);
 
-  // INITIAL SYSTEM PROMPT
+  /* SYSTEM MESSAGE */
   useEffect(() => {
     if (agentPrompt) {
-      setMessages([{ role: "system", content: agentPrompt }]);
+      setMessages([{ role: "system", content: [{ type: "text", text: agentPrompt }] }]);
     }
   }, [agentPrompt]);
 
-  // PICK IMAGE
+  /* PICK IMAGE */
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
+    const result: any = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
     });
 
@@ -72,12 +79,40 @@ export default function ChatUI() {
     }
   };
 
-  // UPLOAD IMAGE
+  /* CLEAN FIRESTORE PAYLOAD (NO undefined!) */
+  const buildPayload = () => {
+    const payload: any = {
+      messages,
+      docId,
+    };
+
+    if (user?.primaryEmailAddress?.emailAddress)
+      payload.userEmail = user.primaryEmailAddress.emailAddress;
+
+    if (agentName) payload.agentName = agentName;
+    if (agentPrompt) payload.agentPrompt = agentPrompt;
+    if (agentId) payload.agentId = agentId;
+
+    return payload;
+  };
+
+  /* SAVE TO FIRESTORE */
+  useEffect(() => {
+    if (!user || messages.length === 0) return;
+
+    const saveMessages = async () => {
+      const payload = buildPayload();
+      await setDoc(doc(firestoreDb, "conversations", docId), payload, { merge: true });
+    };
+
+    saveMessages();
+  }, [messages]);
+
+  /* UPLOAD IMAGE */
   const uploadImageToStorage = async (file: string) => {
     const response = await fetch(file);
     const blobFile = await response.blob();
 
-    // ALWAYS CORRECT PATH
     const path = `BrahmaAi/${Date.now()}.png`;
     const imageRef = ref(storage, path);
 
@@ -85,8 +120,7 @@ export default function ChatUI() {
     return await getDownloadURL(imageRef);
   };
 
-
-  // COPY MESSAGE
+  /* COPY */
   const copyToClipboard = (text: string) => {
     Clipboard.setStringAsync(text);
     setCopiedMsg(text);
@@ -112,31 +146,29 @@ export default function ChatUI() {
     }, 1500);
   };
 
-  // SEND MESSAGE
+  /* SEND */
   const onSendMessage = async () => {
     const trimmedText = inputText.trim();
     if (!trimmedText && !selectedImage) return;
 
-    let content: any = [];
+    let content: any[] = [];
 
     if (trimmedText) {
       content.push({ type: "text", text: trimmedText });
     }
 
-    let uploadedImageUrl = null;
-
     if (selectedImage) {
-      uploadedImageUrl = await uploadImageToStorage(selectedImage);
+      const uploadedUrl = await uploadImageToStorage(selectedImage);
       content.push({
         type: "image_url",
-        image_url: { url: uploadedImageUrl },
+        image_url: { url: uploadedUrl },
       });
     }
 
     const userMessage: Message = {
       role: "user",
       content,
-      image: selectedImage || undefined,
+      ...(selectedImage ? { image: selectedImage } : {}),
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -147,8 +179,8 @@ export default function ChatUI() {
     try {
       const result = await AIChatModel([...messages, userMessage]);
 
-      if (result && result.aiResponse) {
-        const assistantMsg: Message = {
+      if (result?.aiResponse) {
+        const assistantMessage: Message = {
           role: "assistant",
           content:
             typeof result.aiResponse === "string"
@@ -156,16 +188,16 @@ export default function ChatUI() {
               : result.aiResponse.content,
         };
 
-        setMessages((prev) => [...prev, assistantMsg]);
+        setMessages((prev) => [...prev, assistantMessage]);
       }
-    } catch (err) {
-      console.log("AI error:", err);
+    } catch (error) {
+      console.log("AI ERROR:", error);
     } finally {
       setIsTyping(false);
     }
   };
 
-  // AUTO BOTTOM SPACING
+  /* KEYBOARD */
   useEffect(() => {
     Animated.timing(bottomAnim, {
       toValue: keyboard.keyboardShown ? keyboard.keyboardHeight : 0,
@@ -174,18 +206,17 @@ export default function ChatUI() {
     }).start();
   }, [keyboard.keyboardShown]);
 
-  // AUTO SCROLL
+  /* AUTO SCROLL */
   useEffect(() => {
     flatListRef.current?.scrollToEnd({ animated: true });
   }, [messages, isTyping]);
 
   return (
     <View style={styles.container}>
-      {/* CHAT LIST */}
       <FlatList
         ref={flatListRef}
         data={messages}
-        keyExtractor={(_, index) => index.toString()}
+        keyExtractor={(_, i) => i.toString()}
         contentContainerStyle={{
           padding: 12,
           paddingTop: 16,
@@ -195,19 +226,17 @@ export default function ChatUI() {
           if (item.role === "system") return null;
 
           const firstText =
-            item.content?.find?.((c: any) => c.type === "text")?.text || "";
+            item.content?.find((c: any) => c.type === "text")?.text || "";
 
           const firstImage =
-            item.content?.find?.((c: any) => c.type === "image_url")
+            item.content?.find((c: any) => c.type === "image_url")
               ?.image_url?.url || null;
 
           return (
             <View
               style={[
                 styles.messageContainer,
-                item.role === "user"
-                  ? styles.userMessage
-                  : styles.assistantMessage,
+                item.role === "user" ? styles.userMessage : styles.assistantMessage,
               ]}
             >
               {firstImage && (
@@ -222,7 +251,7 @@ export default function ChatUI() {
                 />
               )}
 
-              {firstText ? (
+              {firstText !== "" && (
                 <Text
                   style={[
                     styles.messageText,
@@ -231,9 +260,9 @@ export default function ChatUI() {
                 >
                   {firstText}
                 </Text>
-              ) : null}
+              )}
 
-              {item.role === "assistant" && firstText !== "" && (
+              {item.role === "assistant" && firstText && (
                 <TouchableOpacity
                   style={styles.copyIconBottomRight}
                   onPress={() => copyToClipboard(firstText)}
@@ -273,12 +302,11 @@ export default function ChatUI() {
           ]}
         >
           <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
-
           <TouchableOpacity
             style={styles.imageCancelBtn}
             onPress={() => setSelectedImage(null)}
           >
-            <X size={16} color="#fff" />
+            <X color="#fff" size={16} />
           </TouchableOpacity>
         </Animated.View>
       )}
@@ -329,10 +357,9 @@ export default function ChatUI() {
   );
 }
 
-/* 🔥 SAME CSS – NOT CHANGED */
+/* ⭐ SAME CSS - NOT CHANGED */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#EEF1F6" },
-
   messageContainer: {
     padding: 12,
     borderRadius: 18,
@@ -340,7 +367,6 @@ const styles = StyleSheet.create({
     maxWidth: "78%",
     position: "relative",
   },
-
   userMessage: {
     backgroundColor: "#5B4BFF",
     alignSelf: "flex-end",
@@ -350,7 +376,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-
   assistantMessage: {
     backgroundColor: "#fff",
     alignSelf: "flex-start",
@@ -362,15 +387,8 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-
   messageText: { fontSize: 15.5, lineHeight: 20 },
-
-  copyIconBottomRight: {
-    position: "absolute",
-    bottom: 4,
-    right: 6,
-  },
-
+  copyIconBottomRight: { position: "absolute", bottom: 4, right: 6 },
   bottomBar: {
     position: "absolute",
     left: 0,
@@ -382,9 +400,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: "#E0E3E7",
   },
-
   iconButton: { padding: 6, marginRight: 6 },
-
   input: {
     flex: 1,
     paddingVertical: 12,
@@ -394,7 +410,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#000",
   },
-
   sendButton: {
     marginLeft: 8,
     backgroundColor: "#5B4BFF",
@@ -403,14 +418,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   toast: {
     position: "absolute",
     left: 50,
     right: 50,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: "rgba(30, 30, 30, 0.88)",
+    backgroundColor: "rgba(30,30,30,0.88)",
     borderRadius: 14,
     alignItems: "center",
     shadowColor: "#000",
@@ -418,7 +432,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-
   imagePreviewBox: {
     position: "absolute",
     left: 12,
@@ -435,14 +448,12 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
-
   imagePreview: {
     width: 60,
     height: 60,
     borderRadius: 8,
     marginRight: 12,
   },
-
   imageCancelBtn: {
     position: "absolute",
     top: -6,
