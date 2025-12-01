@@ -1,7 +1,10 @@
+import { useRouter } from "expo-router";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
-export default function CreateAgentBanner({ onPress }: { onPress?: () => void }) {
+export default function CreateAgentBanner() {
+  const router = useRouter();
+
   return (
     <View
       style={{
@@ -29,7 +32,6 @@ export default function CreateAgentBanner({ onPress }: { onPress?: () => void })
         </Text>
 
         <TouchableOpacity
-          onPress={onPress}
           style={{
             marginTop: 14,
             backgroundColor: "white",
@@ -38,6 +40,7 @@ export default function CreateAgentBanner({ onPress }: { onPress?: () => void })
             alignSelf: "flex-start",
             paddingHorizontal: 26,
           }}
+          onPress={() => router.push("/create-agent")}
         >
           <Text style={{ color: "#6D4AFF", fontSize: 16, fontWeight: "700" }}>
             Create
