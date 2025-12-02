@@ -1,17 +1,23 @@
 import { Agents } from "@/app/shared/AgentList";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useMemo } from "react";
 import { FlatList, TouchableOpacity } from "react-native";
 import AgentCard from "./AgentCard";
 import NonFeaturedAgent from "./NonFeaturedAgent";
 
-export default function AgentListComponent({ type }: { type: string }) {
+type Props = {
+  type: string; // "featured" | "nonfeatured"
+};
+
+export default function AgentListComponent({ type }: Props) {
   const router = useRouter();
 
-  const filteredAgents =
-    type === "featured"
+  // Memoize the filtered list so it does not re-calc every render
+  const filteredAgents = useMemo(() => {
+    return type === "featured"
       ? Agents.filter((a) => a.featured)
       : Agents.filter((a) => !a.featured);
+  }, [type]);
 
   return (
     <FlatList
