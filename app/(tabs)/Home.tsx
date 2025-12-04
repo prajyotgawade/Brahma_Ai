@@ -1,5 +1,5 @@
 import CreateAgentBanner from "@/Components/Home/CreateAgentBanner";
-import { useNavigation } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import React from "react";
 import {
   Image,
@@ -15,11 +15,20 @@ import AgentListComponent from "../../Components/Home/AgentListComponent";
 
 export default function Home() {
   const navigation = useNavigation();
+  const router = useRouter();
 
   // Hide the default header
   React.useEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
+
+  const handleSettingsPress = () => {
+    router.push("/Profile");
+  };
+
+  const handleProPress = () => {
+    router.push("/Pro");
+  };
 
   return (
     <View style={styles.container}>
@@ -28,8 +37,9 @@ export default function Home() {
       {/* Fixed Header */}
       <View style={styles.headerWrapper}>
         <View style={styles.headerRow}>
+
           {/* Pro Badge */}
-          <TouchableOpacity style={styles.proBadge}>
+          <TouchableOpacity style={styles.proBadge} onPress={handleProPress}>
             <Image
               source={require("../../assets/images/diamond.png")}
               style={styles.proIcon}
@@ -44,12 +54,17 @@ export default function Home() {
           </View>
 
           {/* Settings Button */}
-          <TouchableOpacity style={styles.settingsButton}>
+          <TouchableOpacity 
+            style={styles.settingsButton}
+            onPress={handleSettingsPress}
+            activeOpacity={0.7}
+          >
             <Image
               source={require("../../assets/images/settings.png")}
               style={styles.settingsIcon}
             />
           </TouchableOpacity>
+
         </View>
       </View>
 
@@ -61,10 +76,7 @@ export default function Home() {
       >
         <AgentListComponent type="featured" />
 
-        <CreateAgentBanner
-          //@ts-ignore
-          onPress={() => navigation.navigate("CreateAgentScreen" as never)}
-        />
+        <CreateAgentBanner onPress={() => navigation.navigate("CreateAgentScreen" as never)} />
 
         <AgentListComponent type="nonfeatured" />
       </ScrollView>
@@ -72,7 +84,7 @@ export default function Home() {
   );
 }
 
-const HEADER_HEIGHT = 160; // total header height including status bar
+const HEADER_HEIGHT = 160;
 
 const styles = StyleSheet.create({
   container: {
@@ -83,16 +95,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    // slightly reduce padding to make cards closer to header
     paddingTop:
       HEADER_HEIGHT -
       (Platform.OS === "ios" ? 20 : StatusBar.currentHeight || 24) -
-      12, // reduced 12px for slight gap
+      12,
     paddingBottom: 140,
     paddingHorizontal: 16,
   },
-
-  // Header
   headerWrapper: {
     position: "absolute",
     top: 0,
@@ -129,8 +138,6 @@ const styles = StyleSheet.create({
     color: "#E0E0FF",
     marginTop: 2,
   },
-
-  // Pro Badge
   proBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -149,8 +156,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#1F1F1F",
   },
-
-  // Settings Button
   settingsButton: {
     padding: 6,
     backgroundColor: "#fff",

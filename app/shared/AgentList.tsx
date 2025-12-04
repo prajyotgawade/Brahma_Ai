@@ -1,4 +1,3 @@
-
 export const Agents = [
   {
     id: 1,
@@ -121,3 +120,8 @@ export const Agents = [
     featured: false
   }
 ];
+
+// Add default export - empty component to satisfy router
+export default function AgentList() {
+  return null;
+}
