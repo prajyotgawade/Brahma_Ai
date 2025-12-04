@@ -1,5 +1,5 @@
 import React from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
+import { Animated, Platform, StatusBar, StyleSheet, Text, View } from "react-native";
 
 import AgentListComponent from "@/Components/Home/AgentListComponent";
 import CreateAgentBanner from "@/Components/Home/CreateAgentBanner";
@@ -9,85 +9,60 @@ export default function Explore() {
   const scrollY = new Animated.Value(0);
 
   return (
-    <Animated.ScrollView
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 140 }}
-      onScroll={Animated.event(
-        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-        { useNativeDriver: true }
-      )}
-    >
-      {/* Top Title */}
-      <Animated.Text
-        style={[
-          styles.headerTitle,
-          {
-            marginTop:20,
-            opacity: scrollY.interpolate({
-              inputRange: [0, 40],
-              outputRange: [1, 0.2],
-              extrapolate: "clamp",
-            }),
-            transform: [
-              {
-                translateY: scrollY.interpolate({
-                  inputRange: [0, 40],
-                  outputRange: [0, -8],
-                  extrapolate: "clamp",
-                }),
-              },
-            ],
-          },
-        ]}
+    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+      <StatusBar
+        backgroundColor="#4F46E5"
+        barStyle="light-content"
+      />
+
+      {/* Fixed Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Explore</Text>
+        <Text style={styles.headerSubtitle}>Discover featured and new agents</Text>
+      </View>
+
+      {/* Scrollable Content */}
+      <Animated.ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom: 140,
+          paddingHorizontal: 20,
+          paddingTop: Platform.OS === "ios" ? 40 : (StatusBar.currentHeight || 24) + 20,
+        }}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
       >
-        Explore
-      </Animated.Text>
+        {/* Create Agent Banner */}
+        <View style={{ marginBottom: 10, marginTop: -30 }}>
+          <CreateAgentBanner />
+        </View>
 
-      {/* Create Agent Banner */}
-      <View style={styles.bannerWrapper}>
-        <CreateAgentBanner />
-      </View>
+        {/* User Created Agents List */}
+        <UserCreatedAgentList />
 
-      {/* Your Agents List (without the text) */}
-      <UserCreatedAgentList />
-
-      {/* Featured Agents */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Featured Agents</Text>
-        <AgentListComponent isFeatured={true} />
-      </View>
-    </Animated.ScrollView>
+        {/* Featured Agents */}
+        <View style={{ marginTop: 25 }}>
+          <Text style={styles.sectionTitle}>Featured Agents</Text>
+          <AgentListComponent isFeatured={true} />
+        </View>
+      </Animated.ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F8F9FB",
-    paddingHorizontal: 16,
-    paddingTop: 16,
+  header: {
+    paddingTop: 40,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    backgroundColor: "#4F46E5",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
-
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#1A1A1A",
-    marginBottom: 10, // reduced gap
-  },
-
-  bannerWrapper: {
-    marginBottom: 16, // spacing between header and banner
-  },
-
-  section: {
-    marginTop: 28,
-  },
-
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#1A1A1A",
-    marginBottom: 14,
-  },
+  headerTitle: { fontSize: 26, fontWeight: "700", color: "white" },
+  headerSubtitle: { fontSize: 14, color: "white", marginTop: 4 },
+  sectionTitle: { fontSize: 22, fontWeight: "700", color: "#1A1A1A", marginBottom: 14 },
 });
