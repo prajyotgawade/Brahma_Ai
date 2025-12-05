@@ -7,6 +7,7 @@ import * as WebBrowser from "expo-web-browser";
 import { doc, setDoc } from "firebase/firestore";
 import React, { useCallback, useEffect } from "react";
 import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -59,7 +60,7 @@ export default function Index() {
             joinDate: Date.now(),
             credit: 20,
           },
-          { merge: true } 
+          { merge: true }
         );
       };
       saveUser().then(() => router.replace("/(tabs)/Home")); // navigate after saving
@@ -67,23 +68,38 @@ export default function Index() {
   }, [user]);
 
   return (
-    <LinearGradient colors={["#A770EF", "#5C2DE8", "#2563EB"]} style={styles.container}>
+    <LinearGradient colors={["#0F172A", "#1E1B4B", "#312E81"]} style={styles.container}>
       <View style={styles.content}>
-        <Image
-          source={require("../assets/images/Robot.png")}
-          style={styles.image}
-          resizeMode="contain"
-        />
+        <Animated.View entering={FadeInDown.delay(100).duration(1000).springify()}>
+          <Image
+            source={require("../assets/images/Robot.png")}
+            style={styles.image}
+            resizeMode="contain"
+          />
+        </Animated.View>
 
-        <Text style={styles.title}>Welcome to Brahma AI</Text>
+        <Animated.View entering={FadeInDown.delay(300).duration(1000).springify()}>
+          <Text style={styles.title}>Welcome to <Text style={styles.highlight}>Brahma AI</Text></Text>
+        </Animated.View>
 
-        <Text style={styles.subtitle}>
-          Your Ultimate AI Personal Agent to make life easier. Try it Today, Completely Free!
-        </Text>
+        <Animated.View entering={FadeInDown.delay(500).duration(1000).springify()}>
+          <Text style={styles.subtitle}>
+            Your Ultimate AI Personal Agent to make life easier. Try it Today, Completely Free!
+          </Text>
+        </Animated.View>
 
-        <TouchableOpacity style={styles.button} onPress={onPress}>
-          <Text style={styles.buttonText}>GET STARTED</Text>
-        </TouchableOpacity>
+        <Animated.View entering={FadeInDown.delay(700).duration(1000).springify()} style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.buttonShadow} onPress={onPress}>
+            <LinearGradient
+              colors={["#6366F1", "#8B5CF6", "#A855F7"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>GET STARTED</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
     </LinearGradient>
   );
@@ -92,9 +108,26 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", alignItems: "center" },
   content: { alignItems: "center", width: "90%" },
-  image: { width: 420, height: 320, marginBottom: 10 },
-  title: { fontSize: 30, fontWeight: "800", color: "#FFFFFF", textAlign: "center" },
-  subtitle: { fontSize: 16, textAlign: "center", color: "#E5E7EB", marginBottom: 35, marginTop: 10 },
-  button: { width: "85%", backgroundColor: "#FFFFFF", paddingVertical: 15, borderRadius: 14 },
-  buttonText: { textAlign: "center", color: "#2563EB", fontSize: 18, fontWeight: "700" },
+  image: { width: 380, height: 380, marginBottom: 20 },
+  title: { fontSize: 32, fontWeight: "800", color: "#F8FAFC", textAlign: "center", letterSpacing: 0.5 },
+  highlight: { color: "#A855F7" },
+  subtitle: { fontSize: 16, textAlign: "center", color: "#CBD5E1", marginBottom: 40, marginTop: 10, lineHeight: 24, paddingHorizontal: 10 },
+  buttonContainer: { width: "100%", alignItems: 'center' },
+  buttonShadow: {
+    width: "85%",
+    shadowColor: "#8B5CF6",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    elevation: 20,
+    borderRadius: 16,
+  },
+  button: {
+    width: "100%",
+    paddingVertical: 18,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: { textAlign: "center", color: "#FFFFFF", fontSize: 18, fontWeight: "800", letterSpacing: 1 },
 });

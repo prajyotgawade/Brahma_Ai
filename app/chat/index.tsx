@@ -3,15 +3,18 @@ import { useKeyboard } from "@react-native-community/hooks";
 import { useNavigation } from "@react-navigation/native";
 import * as Clipboard from "expo-clipboard";
 import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams } from "expo-router";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { Copy, Image as ImageIcon, Plus, Send, X } from "lucide-react-native";
+import { ArrowLeft, Copy, Image as ImageIcon, Plus, Send, X } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
   Image,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -30,8 +33,7 @@ type Message = {
 
 export default function ChatUI() {
   const navigation = useNavigation();
-  const { agentName, agentPrompt, agentId, chatId, messageList } =
-    useLocalSearchParams();
+  const { agentName, agentPrompt, agentId, chatId, messageList } = useLocalSearchParams();
   const { user } = useUser();
   const keyboard = useKeyboard();
   const insets = useSafeAreaInsets();
@@ -43,7 +45,8 @@ export default function ChatUI() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const flatListRef = useRef<FlatList>(null);
-  const bottomAnim = useRef(new Animated.Value(0)).current;
+  const bottomAnim = useRef(new Animated.Value(0)).current; // For input bar movement
+  const fadeAnim = useRef(new Animated.Value(0)).current; // For header entry?
 
   const [docId, setDocId] = useState<string>(
     typeof chatId === "string" ? chatId : Date.now().toString()
@@ -52,15 +55,10 @@ export default function ChatUI() {
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
-  // Header setup
+  // Header setup - Custom Header for maximum control
   useEffect(() => {
     navigation.setOptions({
-      headerShown: true,
-      headerTitle: agentName || "Chat",
-      headerStyle: { backgroundColor: "#4F46E5", shadowOpacity: 0 },
-      headerTintColor: "white",
-      headerTitleStyle: { fontWeight: "700", fontSize: 20 },
-      headerRight: () => <Plus color="#fff" size={22} />,
+      headerShown: false, // We will build our own custom header
     });
   }, []);
 
@@ -105,19 +103,22 @@ export default function ChatUI() {
     );
   }, [messages]);
 
-  // Keyboard animation
-  useEffect(() => {
-    Animated.timing(bottomAnim, {
-      toValue: keyboard.keyboardShown ? keyboard.keyboardHeight : 0,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-  }, [keyboard.keyboardShown]);
+  // Keyboard animation for Input Bar
+  //   useEffect(() => {
+  //     Animated.spring(bottomAnim, {
+  //       toValue: keyboard.keyboardShown ? keyboard.keyboardHeight : 0,
+  //       useNativeDriver: false,
+  //       friction: 8,
+  //     }).start();
+  //   }, [keyboard.keyboardShown]);
+  // NOTE: Using KeyboardAvoidingView instead for smoother native behavior on chat
 
   // Auto scroll
   useEffect(() => {
-    flatListRef.current?.scrollToEnd({ animated: true });
-  }, [messages, isTyping]);
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  }, [messages, isTyping, keyboard.keyboardShown]);
 
   // Pick image
   const pickImage = async () => {
@@ -206,190 +207,320 @@ export default function ChatUI() {
 
     const text = item.content?.find((c) => c.type === "text")?.text || "";
     const image = item.content?.find((c) => c.type === "image_url")?.image_url?.url || null;
+    const isUser = item.role === "user";
 
     return (
-      <Animated.View style={{ opacity: 1, transform: [{ scale: 1 }] }}>
-        <View
-          style={[
-            styles.messageContainer,
-            item.role === "user" ? styles.userMessage : styles.assistantMessage,
-          ]}
-        >
-          {image && <Image source={{ uri: image }} style={styles.messageImage} />}
-          {text !== "" && (
-            <Text
-              style={[
-                styles.messageText,
-                item.role === "user" ? { color: "#fff" } : { color: "#111" },
-              ]}
+      <View
+        style={[
+          styles.messageRow,
+          isUser ? { justifyContent: 'flex-end' } : { justifyContent: 'flex-start' },
+        ]}
+      >
+        {!isUser && (
+          <View style={styles.botAvatar}>
+            {/* Placeholder for Bot Icon, could use agent image if available */}
+            <Text style={{ fontSize: 20 }}>🤖</Text>
+          </View>
+        )}
+
+        <View style={{ maxWidth: "75%" }}>
+          {isUser ? (
+            <LinearGradient
+              colors={["#6366F1", "#A855F7"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.messageBubble, styles.userBubble]}
             >
-              {text}
-            </Text>
-          )}
-          {item.role === "assistant" && text && (
-            <TouchableOpacity
-              style={styles.copyIconBottomRight}
-              onPress={() => copyToClipboard(text)}
-            >
-              <Copy size={16} color="#555" />
-            </TouchableOpacity>
+              {image && <Image source={{ uri: image }} style={styles.messageImage} />}
+              {text !== "" && <Text style={styles.userText}>{text}</Text>}
+            </LinearGradient>
+          ) : (
+            <View style={[styles.messageBubble, styles.botBubble]}>
+              {image && <Image source={{ uri: image }} style={styles.messageImage} />}
+              {text !== "" && <Text style={styles.botText}>{text}</Text>}
+
+              <TouchableOpacity
+                style={styles.copyIcon}
+                onPress={() => copyToClipboard(text)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Copy size={14} color="#64748B" />
+              </TouchableOpacity>
+            </View>
           )}
         </View>
-      </Animated.View>
+      </View>
     );
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        keyExtractor={(_, i) => i.toString()}
-        contentContainerStyle={{ padding: 16, paddingBottom: 160 }}
-        renderItem={renderItem}
-        ListFooterComponent={
-          isTyping ? (
-            <Text style={{ color: "#555", fontStyle: "italic", paddingHorizontal: 16 }}>
-              AI is typing...
-            </Text>
-          ) : null
-        }
-      />
-
-      {selectedImage && (
-        <Animated.View style={[styles.imagePreviewBox, { bottom: keyboard.keyboardShown ? keyboard.keyboardHeight + 70 : 120 }]}>
-          <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
-          <TouchableOpacity style={styles.imageCancelBtn} onPress={() => setSelectedImage(null)}>
-            <X color="#fff" size={16} />
-          </TouchableOpacity>
-        </Animated.View>
-      )}
-
-      {copiedMsg && (
-        <Animated.View style={[styles.toast, { opacity: opacityAnim, transform: [{ scale: scaleAnim }], bottom: (keyboard.keyboardShown ? keyboard.keyboardHeight : 70) + 50 }]}>
-          <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }}>✓ Message copied</Text>
-        </Animated.View>
-      )}
-
-      <Animated.View style={[styles.bottomBar, { paddingBottom: insets.bottom + 10, bottom: bottomAnim }]}>
-        <TouchableOpacity style={styles.iconButton} onPress={pickImage}>
-          <ImageIcon size={24} color="#555" />
+    <View style={styles.container}>
+      {/* Custom Header */}
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <ArrowLeft color="#F8FAFC" size={24} />
         </TouchableOpacity>
-        <TextInput
-          value={inputText}
-          onChangeText={setInputText}
-          placeholder="Type a message…"
-          placeholderTextColor="#777"
-          style={styles.input}
+        <View>
+          <Text style={styles.headerTitle}>{agentName || "Chat"}</Text>
+          <Text style={styles.headerStatus}>
+            {isTyping ? "Typing..." : "Online"}
+          </Text>
+        </View>
+        <TouchableOpacity style={styles.headerRight}>
+          <Plus color="#F8FAFC" size={24} />
+        </TouchableOpacity>
+      </View>
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+      >
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(_, i) => i.toString()}
+          contentContainerStyle={{
+            padding: 16,
+            paddingBottom: 20,
+            paddingTop: 10
+          }}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
         />
-        <TouchableOpacity style={styles.sendButton} onPress={onSendMessage}>
-          <Send size={20} color="#fff" />
-        </TouchableOpacity>
-      </Animated.View>
+
+        {/* Image Preview */}
+        {selectedImage && (
+          <View style={styles.imagePreviewContainer}>
+            <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+            <TouchableOpacity style={styles.imageCancelBtn} onPress={() => setSelectedImage(null)}>
+              <X color="#fff" size={16} />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Copy Toast */}
+        {copiedMsg && (
+          <Animated.View
+            style={[
+              styles.toast,
+              {
+                opacity: opacityAnim,
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
+          >
+            <Text style={styles.toastText}>✓ Copied to clipboard</Text>
+          </Animated.View>
+        )}
+
+        {/* Input Bar */}
+        <View style={[
+          styles.inputContainer,
+          { paddingBottom: Platform.OS === 'ios' ? insets.bottom + 5 : 12 }
+        ]}>
+          <TouchableOpacity onPress={pickImage} style={styles.attachButton}>
+            <ImageIcon size={24} color="#94A3B8" />
+          </TouchableOpacity>
+
+          <View style={styles.inputWrapper}>
+            <TextInput
+              value={inputText}
+              onChangeText={setInputText}
+              placeholder="Message..."
+              placeholderTextColor="#64748B"
+              style={styles.input}
+              multiline
+            />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.sendButton, (!inputText.trim() && !selectedImage) && styles.sendButtonDisabled]}
+            onPress={onSendMessage}
+            disabled={!inputText.trim() && !selectedImage}
+          >
+            <Send size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  messageContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: "#0F172A",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    backgroundColor: "#1E1B4B",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.05)",
+    zIndex: 10,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.1)",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#F8FAFC",
+    textAlign: 'center',
+  },
+  headerStatus: {
+    fontSize: 12,
+    color: "#A855F7",
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  headerRight: {
+    padding: 8,
+  },
+  messageRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginBottom: 16,
+  },
+  botAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#1E293B",
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  messageBubble: {
     padding: 14,
     borderRadius: 20,
-    marginVertical: 6,
-    maxWidth: "78%",
-    position: "relative",
+    minWidth: 60,
   },
-  userMessage: {
-    backgroundColor: "#5B4BFF",
-    alignSelf: "flex-end",
-    shadowColor: "#5B4BFF",
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 3,
+  userBubble: {
+    borderBottomRightRadius: 4,
   },
-  assistantMessage: {
-    backgroundColor: "#fff",
-    alignSelf: "flex-start",
+  botBubble: {
+    backgroundColor: "#1E293B",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
-    elevation: 2,
+    borderColor: "rgba(255,255,255,0.05)",
+    borderBottomLeftRadius: 4,
   },
-  messageText: { fontSize: 15.5, lineHeight: 20 },
-  messageImage: { width: 180, height: 180, borderRadius: 12, marginBottom: 8 },
-  copyIconBottomRight: { position: "absolute", bottom: 6, right: 8 },
-  bottomBar: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    backgroundColor: "#fff",
+  userText: {
+    color: "#FFF",
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  botText: {
+    color: "#E2E8F0",
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  messageImage: {
+    width: 200,
+    height: 150,
+    borderRadius: 12,
+    marginBottom: 8,
+    resizeMode: 'cover',
+  },
+  copyIcon: {
+    alignSelf: 'flex-end',
+    marginTop: 4,
+    opacity: 0.7,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    backgroundColor: "#0F172A",
     borderTopWidth: 1,
-    borderColor: "#E0E3E7",
+    borderTopColor: "rgba(255,255,255,0.05)",
   },
-  iconButton: { padding: 6, marginRight: 6 },
-  input: {
+  attachButton: {
+    padding: 10,
+    marginRight: 8,
+    marginBottom: 4,
+  },
+  inputWrapper: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    backgroundColor: "#F2F4F7",
-    borderRadius: 25,
-    fontSize: 15,
-    color: "#000",
+    backgroundColor: "#1E293B",
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 4,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  input: {
+    color: "#F8FAFC",
+    fontSize: 16,
+    maxHeight: 100,
   },
   sendButton: {
-    marginLeft: 8,
-    backgroundColor: "#5B4BFF",
-    padding: 11,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  toast: {
-    position: "absolute",
-    left: 50,
-    right: 50,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: "rgba(30,30,30,0.88)",
-    borderRadius: 14,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.25,
+    backgroundColor: "#6366F1",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+    shadowColor: "#6366F1",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: 5,
   },
-  imagePreviewBox: {
-    position: "absolute",
-    left: 12,
-    right: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 6,
+  sendButtonDisabled: {
+    backgroundColor: "#334155",
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  imagePreviewContainer: {
+    position: 'absolute',
+    bottom: 80,
+    left: 20,
+    backgroundColor: "#1E293B",
+    padding: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
+    borderColor: "rgba(255,255,255,0.1)",
+    elevation: 5,
   },
   imagePreview: {
-    width: 60,
-    height: 60,
+    width: 80,
+    height: 80,
     borderRadius: 8,
-    marginRight: 12,
   },
   imageCancelBtn: {
-    position: "absolute",
-    top: -6,
-    right: -6,
-    backgroundColor: "rgba(0,0,0,0.7)",
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: "#EF4444",
+    borderRadius: 12,
     padding: 4,
+  },
+  toast: {
+    position: 'absolute',
+    top: 100,
+    alignSelf: 'center',
+    backgroundColor: "rgba(16, 185, 129, 0.9)", // Green
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 20,
+    zIndex: 100,
+  },
+  toastText: {
+    color: "#FFF",
+    fontWeight: "600",
   },
 });

@@ -1,21 +1,23 @@
-import CreateAgentBanner from "@/Components/Home/CreateAgentBanner";
+import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useRouter } from "expo-router";
 import React from "react";
 import {
   Image,
-  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AgentListComponent from "../../Components/Home/AgentListComponent";
+import CreateAgentBanner from "../../Components/Home/CreateAgentBanner";
 
 export default function Home() {
   const navigation = useNavigation();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   // Hide the default header
   React.useEffect(() => {
@@ -32,19 +34,26 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="#4F46E5" barStyle="light-content" />
+      <StatusBar backgroundColor="#1E1B4B" barStyle="light-content" />
 
       {/* Fixed Header */}
-      <View style={styles.headerWrapper}>
+      <View style={[styles.headerWrapper, { paddingTop: insets.top + 10 }]}>
         <View style={styles.headerRow}>
 
           {/* Pro Badge */}
-          <TouchableOpacity style={styles.proBadge} onPress={handleProPress}>
-            <Image
-              source={require("../../assets/images/diamond.png")}
-              style={styles.proIcon}
-            />
-            <Text style={styles.proText}>Pro</Text>
+          <TouchableOpacity onPress={handleProPress}>
+            <LinearGradient
+              colors={["#F59E0B", "#D97706"]}
+              style={styles.proBadge}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Image
+                source={require("../../assets/images/diamond.png")}
+                style={styles.proIcon}
+              />
+              <Text style={styles.proText}>Pro</Text>
+            </LinearGradient>
           </TouchableOpacity>
 
           {/* Title & Subtitle */}
@@ -54,7 +63,7 @@ export default function Home() {
           </View>
 
           {/* Settings Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.settingsButton}
             onPress={handleSettingsPress}
             activeOpacity={0.7}
@@ -62,6 +71,7 @@ export default function Home() {
             <Image
               source={require("../../assets/images/settings.png")}
               style={styles.settingsIcon}
+              tintColor={'#FFF'}
             />
           </TouchableOpacity>
 
@@ -71,12 +81,18 @@ export default function Home() {
       {/* Scrollable Content */}
       <ScrollView
         style={styles.scrollContainer}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingTop: 130,
+            paddingBottom: 100 + insets.bottom
+          }
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <AgentListComponent type="featured" />
 
-        <CreateAgentBanner onPress={() => navigation.navigate("CreateAgentScreen" as never)} />
+        <CreateAgentBanner />
 
         <AgentListComponent type="nonfeatured" />
       </ScrollView>
@@ -84,22 +100,15 @@ export default function Home() {
   );
 }
 
-const HEADER_HEIGHT = 160;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "#0F172A",
   },
   scrollContainer: {
     flex: 1,
   },
   scrollContent: {
-    paddingTop:
-      HEADER_HEIGHT -
-      (Platform.OS === "ios" ? 20 : StatusBar.currentHeight || 24) -
-      12,
-    paddingBottom: 140,
     paddingHorizontal: 16,
   },
   headerWrapper: {
@@ -107,7 +116,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#1E1B4B",
     paddingTop: 35,
     paddingBottom: 16,
     paddingHorizontal: 20,
@@ -115,10 +124,13 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 24,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 6,
     zIndex: 1000,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
+    borderTopWidth: 0,
   },
   headerRow: {
     flexDirection: "row",
@@ -135,18 +147,17 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 14,
-    color: "#E0E0FF",
+    color: "#94A3B8",
     marginTop: 2,
   },
   proBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFD700",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
+    shadowColor: "#F59E0B",
+    shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 3,
   },
@@ -154,19 +165,16 @@ const styles = StyleSheet.create({
   proText: {
     fontWeight: "700",
     fontSize: 16,
-    color: "#1F1F1F",
+    color: "#FFFFFF",
   },
   settingsButton: {
-    padding: 6,
-    backgroundColor: "#fff",
+    padding: 8,
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   settingsIcon: {
     width: 22,
     height: 22,
   },
 });
+

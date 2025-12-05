@@ -67,7 +67,7 @@ export default function History() {
     });
 
     const lastMessage = item.messages?.[item.messages.length - 1];
-    let icon = <MessageCircle size={28} color="#4B5563" />;
+    let icon = <MessageCircle size={28} color="#F8FAFC" />;
 
     if (item.emoji) icon = <Text style={{ fontSize: 22 }}>{item.emoji}</Text>;
     else if (lastMessage?.emoji) icon = <Text style={{ fontSize: 22 }}>{lastMessage.emoji}</Text>;
@@ -79,22 +79,24 @@ export default function History() {
           style={{
             flexDirection: "row",
             padding: 15,
-            backgroundColor: "#fff",
+            backgroundColor: "#1E293B",
             marginBottom: 12,
-            borderRadius: 12,
+            borderRadius: 16,
             alignItems: "center",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.1,
+            shadowOpacity: 0.3,
             shadowRadius: 6,
             elevation: 3,
+            borderWidth: 1,
+            borderColor: "rgba(255,255,255,0.05)",
           }}
         >
           <View
             style={{
               width: 50,
               height: 50,
-              backgroundColor: "#f0f0f0",
+              backgroundColor: "rgba(255,255,255,0.1)",
               borderRadius: 12,
               alignItems: "center",
               justifyContent: "center",
@@ -105,8 +107,8 @@ export default function History() {
           </View>
 
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 18, fontWeight: "600", color: "#111827" }}>{item.agentName}</Text>
-            <Text numberOfLines={2} style={{ fontSize: 14, color: "#6B7280", marginTop: 4 }}>
+            <Text style={{ fontSize: 18, fontWeight: "600", color: "#F8FAFC" }}>{item.agentName}</Text>
+            <Text numberOfLines={2} style={{ fontSize: 14, color: "#94A3B8", marginTop: 4 }}>
               {lastMessage?.content?.[0]?.text ?? "No messages"}
             </Text>
           </View>
@@ -118,26 +120,29 @@ export default function History() {
   const TAB_BAR_HEIGHT = Platform.OS === "ios" ? 80 : 70;
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+    <View style={{ flex: 1, backgroundColor: "#0F172A" }}>
       {/* Header */}
       <View
         style={{
           paddingTop: 40,
           paddingBottom: 20,
           paddingHorizontal: 20,
-          backgroundColor: "#4F46E5",
-          borderBottomLeftRadius: 20,
-          borderBottomRightRadius: 20,
+          backgroundColor: "#1E1B4B",
+          borderBottomLeftRadius: 24,
+          borderBottomRightRadius: 24,
+          borderWidth: 1,
+          borderColor: "rgba(255,255,255,0.05)",
+          borderTopWidth: 0,
         }}
       >
-        <Text style={{ fontSize: 26, fontWeight: "700", color: "white" }}>Chat History</Text>
-        <Text style={{ fontSize: 14, color: "white", marginTop: 4 }}>Your recent conversations</Text>
+        <Text style={{ fontSize: 26, fontWeight: "700", color: "#F8FAFC" }}>Chat History</Text>
+        <Text style={{ fontSize: 14, color: "#94A3B8", marginTop: 4 }}>Your recent conversations</Text>
       </View>
 
       {/* Chat List */}
       {loading ? (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color="#4F46E5" />
+          <ActivityIndicator size="large" color="#A855F7" />
         </View>
       ) : (
         <View style={{ flex: 1 }}>

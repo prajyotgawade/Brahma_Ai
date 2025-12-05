@@ -9,9 +9,9 @@ export default function Explore() {
   const scrollY = new Animated.Value(0);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+    <View style={{ flex: 1, backgroundColor: "#0F172A" }}>
       <StatusBar
-        backgroundColor="#4F46E5"
+        backgroundColor="#1E1B4B"
         barStyle="light-content"
       />
 
@@ -46,7 +46,7 @@ export default function Explore() {
         {/* Featured Agents */}
         <View style={{ marginTop: 25 }}>
           <Text style={styles.sectionTitle}>Featured Agents</Text>
-          <AgentListComponent isFeatured={true} />
+          <AgentListComponent type="featured" />
         </View>
       </Animated.ScrollView>
     </View>
@@ -58,11 +58,14 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 20,
     paddingHorizontal: 20,
-    backgroundColor: "#4F46E5",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    backgroundColor: "#1E1B4B",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
+    borderTopWidth: 0,
   },
-  headerTitle: { fontSize: 26, fontWeight: "700", color: "white" },
-  headerSubtitle: { fontSize: 14, color: "white", marginTop: 4 },
-  sectionTitle: { fontSize: 22, fontWeight: "700", color: "#1A1A1A", marginBottom: 14 },
+  headerTitle: { fontSize: 26, fontWeight: "700", color: "#F8FAFC" },
+  headerSubtitle: { fontSize: 14, color: "#94A3B8", marginTop: 4 },
+  sectionTitle: { fontSize: 22, fontWeight: "700", color: "#F8FAFC", marginBottom: 14 },
 });

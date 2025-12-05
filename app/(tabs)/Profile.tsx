@@ -21,10 +21,10 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { title: "Create Agent", icon: <PlusCircle size={22} color="#4F46E5" />, path: "/create-agent" },
-  { title: "Explore", icon: <Compass size={22} color="#4F46E5" />, path: "/(tabs)/Explore" },
-  { title: "My History", icon: <Clock size={22} color="#4F46E5" />, path: "/(tabs)/History" },
-  { title: "Logout", icon: <LogOut size={22} color="#FF4C4C" /> },
+  { title: "Create Agent", icon: <PlusCircle size={22} color="#A855F7" />, path: "/create-agent" },
+  { title: "Explore", icon: <Compass size={22} color="#A855F7" />, path: "/(tabs)/Explore" },
+  { title: "My History", icon: <Clock size={22} color="#A855F7" />, path: "/(tabs)/History" },
+  { title: "Logout", icon: <LogOut size={22} color="#EF4444" /> },
 ];
 
 export default function ProfileScreen() {
@@ -84,22 +84,25 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F7F7F8",
+    backgroundColor: "#0F172A",
   },
 
   header: {
-    backgroundColor: "#6D4BFF",
+    backgroundColor: "#1E1B4B",
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 35,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
+    borderTopWidth: 0,
   },
 
   headerTitle: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#fff",
+    color: "#F8FAFC",
     marginBottom: 18,
   },
 
@@ -112,18 +115,18 @@ const styles = StyleSheet.create({
     height: 95,
     borderRadius: 48,
     borderWidth: 3,
-    borderColor: "#fff",
+    borderColor: "#A855F7",
     marginBottom: 10,
   },
 
   emailText: {
     fontSize: 16,
-    color: "#fff",
+    color: "#E2E8F0",
     fontWeight: "500",
   },
 
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: "#1E293B",
     marginHorizontal: 20,
     marginTop: -20,
     borderRadius: 18,
@@ -131,22 +134,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     elevation: 6,
     shadowColor: "#000",
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.3,
     shadowRadius: 6,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
   },
 
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 14,
-    borderBottomColor: "#eee",
+    borderBottomColor: "rgba(255,255,255,0.05)",
     borderBottomWidth: 1,
   },
 
   menuText: {
     fontSize: 16,
     marginLeft: 15,
-    color: "#222",
+    color: "#F8FAFC",
     fontWeight: "600",
   },
 });

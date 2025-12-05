@@ -72,7 +72,7 @@ export default function UserCreatedAgentList() {
               <Text style={styles.agentName}>{item.agentName}</Text>
             </View>
 
-            <ArrowRight width={20} height={20} color="#333" />
+            <ArrowRight width={20} height={20} color="#94A3B8" />
           </TouchableOpacity>
         )}
       />
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: "#F8FAFC",
     marginBottom: 10,
   },
 
@@ -94,13 +94,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 14,
     borderRadius: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#1E293B",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "rgba(255,255,255,0.05)",
     marginTop: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 3,
   },
@@ -118,6 +118,6 @@ const styles = StyleSheet.create({
   agentName: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#111",
+    color: "#F8FAFC",
   },
 });
