@@ -2,9 +2,10 @@ import ArrowRight from "@/assets/icons/ArrowRight";
 import { firestoreDb } from "@/config/Firebaseconfig";
 import { useUser } from "@clerk/clerk-expo";
 import { router } from "expo-router";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, deleteDoc, doc, onSnapshot, query, where } from "firebase/firestore";
+import { Trash2 } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type Agent = {
   agentName: string;
@@ -16,32 +17,57 @@ type Agent = {
 export default function UserCreatedAgentList() {
   const { user } = useUser();
   const [agentList, setAgentList] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) GetUserAgents();
-  }, [user]);
+    if (!user) return;
 
-  const GetUserAgents = async () => {
-    try {
-      const q = query(
-        collection(firestoreDb, "agents"),
-        where("userEmail", "==", user?.primaryEmailAddress?.emailAddress)
-      );
+    setLoading(true);
+    const q = query(
+      collection(firestoreDb, "agents"),
+      where("userEmail", "==", user?.primaryEmailAddress?.emailAddress)
+    );
 
-      const querySnapshot = await getDocs(q);
-
+    // Real-time listener
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const list: Agent[] = [];
-      querySnapshot.forEach((doc) => {
+      snapshot.forEach((doc) => {
         list.push({
           ...(doc.data() as Agent),
           agentId: doc.id,
         });
       });
-
       setAgentList(list);
-    } catch (e) {
-      console.log("Error fetching agents:", e);
-    }
+      setLoading(false);
+    }, (error) => {
+      console.log("Error fetching agents:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const onDeleteAgent = (agent: Agent) => {
+    Alert.alert(
+      "Delete Agent",
+      `Are you sure you want to delete "${agent.agentName}"?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(firestoreDb, "agents", agent.agentId));
+              // No need to manually refresh, onSnapshot handles it!
+            } catch (error) {
+              console.log("Delete error:", error);
+              Alert.alert("Error", "Failed to delete agent. Please try again.");
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -72,7 +98,18 @@ export default function UserCreatedAgentList() {
               <Text style={styles.agentName}>{item.agentName}</Text>
             </View>
 
-            <ArrowRight width={20} height={20} color="#94A3B8" />
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation();
+                  onDeleteAgent(item);
+                }}
+                style={styles.deleteBtn}
+              >
+                <Trash2 size={20} color="#EF4444" />
+              </TouchableOpacity>
+              <ArrowRight width={20} height={20} color="#94A3B8" />
+            </View>
           </TouchableOpacity>
         )}
       />
@@ -120,4 +157,16 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#F8FAFC",
   },
+
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+
+  deleteBtn: {
+    padding: 8,
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
+    borderRadius: 8,
+  }
 });
