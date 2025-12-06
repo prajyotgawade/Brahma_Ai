@@ -17,6 +17,8 @@ import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
 const { width } = Dimensions.get("window");
 
+import * as WebBrowser from "expo-web-browser";
+
 export default function Pro() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -33,27 +35,32 @@ export default function Pro() {
   const handleSubscribe = async () => {
     setLoading(true);
     try {
-      // Simulate API call or Payment Gateway initiation
-      // In a real app, this would fetch a Stripe Payment Intent or open a Checkout Session
+      // Get the appropriate link based on selection
+      // Fallback to hardcoded links if .env is not reloaded yet
+      let paymentLink = "";
 
-      // Example: Open Stripe Checkout (Placeholder URL)
-      // await WebBrowser.openBrowserAsync("https://buy.stripe.com/your-payment-link");
+      if (selectedPlan === "monthly") {
+        paymentLink = process.env.EXPO_PUBLIC_RAZORPAY_MONTHLY_URL || "https://rzp.io/rzp/liSlr0F0";
+        if (paymentLink.includes("your_")) paymentLink = "https://rzp.io/rzp/liSlr0F0";
+      } else {
+        paymentLink = process.env.EXPO_PUBLIC_RAZORPAY_YEARLY_URL || "https://rzp.io/rzp/6NzSdlo";
+        if (paymentLink.includes("your_")) paymentLink = "https://rzp.io/rzp/6NzSdlo";
+      }
 
-      // Simulating a delay for "Processing"
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      if (!paymentLink) {
+        Alert.alert(
+          "Setup Required",
+          "Please add your Razorpay Payment Link to the .env file and restart the server."
+        );
+        setLoading(false);
+        return;
+      }
 
-      Alert.alert(
-        "Payment Gateway",
-        "This would open your Stripe/Payment Provider checkout page.",
-        [
-          {
-            text: "OK",
-            onPress: () => router.back(), // Go back after 'success'
-          },
-        ]
-      );
+      // Open the Razorpay Payment Link in an in-app browser
+      await WebBrowser.openBrowserAsync(paymentLink);
+
     } catch (error) {
-      Alert.alert("Error", "Something went wrong with the payment gateway.");
+      Alert.alert("Error", "Could not open payment page.");
     } finally {
       setLoading(false);
     }
@@ -118,7 +125,7 @@ export default function Pro() {
               <View style={styles.planContent}>
                 <View>
                   <Text style={styles.planTitle}>Monthly</Text>
-                  <Text style={styles.planPrice}>$9.99<Text style={styles.perUser}>/mo</Text></Text>
+                  <Text style={styles.planPrice}>₹199<Text style={styles.perUser}>/mo</Text></Text>
                 </View>
                 {selectedPlan === "monthly" && (
                   <Ionicons name="radio-button-on" size={24} color="#A855F7" />
@@ -147,7 +154,7 @@ export default function Pro() {
               <View style={styles.planContent}>
                 <View>
                   <Text style={styles.planTitle}>Yearly</Text>
-                  <Text style={styles.planPrice}>$99.99<Text style={styles.perUser}>/yr</Text></Text>
+                  <Text style={styles.planPrice}>₹1999<Text style={styles.perUser}>/yr</Text></Text>
                   <Text style={styles.saveText}>Save 20%</Text>
                 </View>
                 {selectedPlan === "yearly" && (
@@ -183,7 +190,7 @@ export default function Pro() {
               )}
             </LinearGradient>
           </TouchableOpacity>
-          <Text style={styles.disclaimer}>Cancel anytime. Secure payment via Stripe.</Text>
+          <Text style={styles.disclaimer}>Cancel anytime. Secure payment via Razorpay.</Text>
         </Animated.View>
 
       </ScrollView>
