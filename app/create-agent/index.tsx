@@ -18,10 +18,14 @@ import {
   View
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useTheme } from "../shared/ThemeContext";
 
 export default function CreateAgent() {
   const router = useRouter();
   const { user } = useUser();
+  const { theme } = useTheme();
+
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
 
   const [emoji, setEmoji] = useState("🤖");
   const [agentName, setAgentName] = useState("");
@@ -81,12 +85,12 @@ export default function CreateAgent() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={{ flex: 1, backgroundColor: "#0F172A" }}>
+      <View style={styles.container}>
 
         {/* Custom Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <ArrowLeft color="#fff" size={24} />
+            <ArrowLeft color={theme.textPrim} size={24} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Create New Agent</Text>
           <View style={{ width: 40 }} />
@@ -125,7 +129,7 @@ export default function CreateAgent() {
             <Text style={styles.label}>Name</Text>
             <TextInput
               placeholder="e.g., Coding Wizard"
-              placeholderTextColor="#64748B"
+              placeholderTextColor={theme.textSec}
               style={styles.input}
               value={agentName}
               onChangeText={setAgentName}
@@ -137,7 +141,7 @@ export default function CreateAgent() {
             <Text style={styles.subLabel}>Describe how this agent should behave.</Text>
             <TextInput
               placeholder="e.g., You are an expert Python developer. Always provide code examples..."
-              placeholderTextColor="#64748B"
+              placeholderTextColor={theme.textSec}
               style={styles.textArea}
               multiline
               textAlignVertical="top"
@@ -149,7 +153,7 @@ export default function CreateAgent() {
           {/* Create Button */}
           <TouchableOpacity onPress={CreateNewAgent} activeOpacity={0.8} style={styles.createBtnWrapper}>
             <LinearGradient
-              colors={["#6366F1", "#A855F7"]}
+              colors={[theme.accent, "#A855F7"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.createBtn}
@@ -202,7 +206,11 @@ export default function CreateAgent() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.background[0],
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -213,13 +221,13 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     padding: 8,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: theme.cardBorder,
     borderRadius: 12,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#fff',
+    color: theme.textPrim,
   },
   avatarContainer: {
     alignItems: 'center',
@@ -230,7 +238,7 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     elevation: 10,
-    shadowColor: "#6366F1",
+    shadowColor: theme.accent,
     shadowOpacity: 0.5,
     shadowRadius: 16,
     marginBottom: 12,
@@ -241,7 +249,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: theme.cardBorder,
   },
   emojiText: {
     fontSize: 48
@@ -250,14 +258,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#A855F7',
+    backgroundColor: theme.accent,
     padding: 6,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#0F172A',
+    borderColor: theme.background[0],
   },
   avatarHelpText: {
-    color: '#94A3B8',
+    color: theme.textSec,
     fontSize: 14,
   },
   formGroup: {
@@ -266,38 +274,38 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#F8FAFC",
+    color: theme.textPrim,
     marginBottom: 8
   },
   subLabel: {
     fontSize: 13,
-    color: "#94A3B8",
+    color: theme.textSec,
     marginBottom: 10,
     marginTop: -4,
   },
   input: {
-    backgroundColor: "#1E293B",
+    backgroundColor: theme.cardBg,
     padding: 16,
     borderRadius: 16,
     fontSize: 16,
-    color: "#fff",
+    color: theme.textPrim,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: theme.cardBorder,
   },
   textArea: {
-    backgroundColor: "#1E293B",
+    backgroundColor: theme.cardBg,
     padding: 16,
     borderRadius: 16,
     height: 140,
     fontSize: 16,
     lineHeight: 24,
-    color: "#fff",
+    color: theme.textPrim,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: theme.cardBorder,
   },
   createBtnWrapper: {
     marginTop: 20,
-    shadowColor: "#A855F7",
+    shadowColor: theme.accent,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 16,
@@ -320,7 +328,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#1E293B',
+    backgroundColor: theme.cardBg,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingBottom: 40,
@@ -329,13 +337,13 @@ const styles = StyleSheet.create({
   modalHeader: {
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: theme.cardBorder,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   modalTitle: {
-    color: '#fff',
+    color: theme.textPrim,
     fontSize: 18,
     fontWeight: '700',
   },
@@ -343,7 +351,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   closeBtnText: {
-    color: '#A855F7',
+    color: theme.accent,
     fontSize: 16,
     fontWeight: '600',
   },

@@ -1,5 +1,6 @@
 import React from "react";
 import { Animated, Platform, StatusBar, StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../shared/ThemeContext";
 
 import AgentListComponent from "@/Components/Home/AgentListComponent";
 import CreateAgentBanner from "@/Components/Home/CreateAgentBanner";
@@ -7,18 +8,19 @@ import UserCreatedAgentList from "@/Components/Home/Explore/UserCreatedAgentList
 
 export default function Explore() {
   const scrollY = new Animated.Value(0);
+  const { theme, themeMode } = useTheme();
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#0F172A" }}>
+    <View style={{ flex: 1, backgroundColor: theme.background[0] }}>
       <StatusBar
-        backgroundColor="#1E1B4B"
-        barStyle="light-content"
+        backgroundColor={theme.background[1]}
+        barStyle={themeMode === "dark" ? "light-content" : "dark-content"}
       />
 
       {/* Fixed Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Explore</Text>
-        <Text style={styles.headerSubtitle}>Discover featured and new agents</Text>
+      <View style={[styles.header, { backgroundColor: theme.background[1], borderColor: theme.cardBorder }]}>
+        <Text style={[styles.headerTitle, { color: theme.textPrim }]}>Explore</Text>
+        <Text style={[styles.headerSubtitle, { color: theme.textSec }]}>Discover featured and new agents</Text>
       </View>
 
       {/* Scrollable Content */}
@@ -45,7 +47,7 @@ export default function Explore() {
 
         {/* Featured Agents */}
         <View style={{ marginTop: 25 }}>
-          <Text style={styles.sectionTitle}>Featured Agents</Text>
+          <Text style={[styles.sectionTitle, { color: theme.textPrim }]}>Featured Agents</Text>
           <AgentListComponent type="featured" />
         </View>
       </Animated.ScrollView>
@@ -58,14 +60,12 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 20,
     paddingHorizontal: 20,
-    backgroundColor: "#1E1B4B",
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
     borderTopWidth: 0,
   },
-  headerTitle: { fontSize: 26, fontWeight: "700", color: "#F8FAFC" },
-  headerSubtitle: { fontSize: 14, color: "#94A3B8", marginTop: 4 },
-  sectionTitle: { fontSize: 22, fontWeight: "700", color: "#F8FAFC", marginBottom: 14 },
+  headerTitle: { fontSize: 26, fontWeight: "700" },
+  headerSubtitle: { fontSize: 14, marginTop: 4 },
+  sectionTitle: { fontSize: 22, fontWeight: "700", marginBottom: 14 },
 });

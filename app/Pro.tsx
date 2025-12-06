@@ -1,64 +1,42 @@
-import { Ionicons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
+import { ArrowLeft, Check, Crown, Shield, Zap } from "lucide-react-native";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
-  Dimensions,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View
 } from "react-native";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTheme } from "./shared/ThemeContext";
 
-const { width } = Dimensions.get("window");
-
-import * as WebBrowser from "expo-web-browser";
-
-export default function Pro() {
+export default function ProScreen() {
   const router = useRouter();
+  const { theme, themeMode } = useTheme();
+  const insets = useSafeAreaInsets();
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "yearly">("yearly");
-
-  const features = [
-    { icon: "infinite", text: "Unlimited AI Interactions" },
-    { icon: "speedometer", text: "Fastest Response Speed" },
-    { icon: "hardware-chip", text: "Access to GPT-4 & Advanced Models" },
-    { icon: "cloud-upload", text: "Unlimited Cloud Storage" },
-    { icon: "shield-checkmark", text: "Priority Support & Security" },
-  ];
 
   const handleSubscribe = async () => {
     setLoading(true);
     try {
-      // Get the appropriate link based on selection
-      // Fallback to hardcoded links if .env is not reloaded yet
-      let paymentLink = "";
+      const url =
+        billingCycle === "monthly"
+          ? process.env.EXPO_PUBLIC_RAZORPAY_MONTHLY_URL
+          : process.env.EXPO_PUBLIC_RAZORPAY_YEARLY_URL;
 
-      if (selectedPlan === "monthly") {
-        paymentLink = process.env.EXPO_PUBLIC_RAZORPAY_MONTHLY_URL || "https://rzp.io/rzp/liSlr0F0";
-        if (paymentLink.includes("your_")) paymentLink = "https://rzp.io/rzp/liSlr0F0";
-      } else {
-        paymentLink = process.env.EXPO_PUBLIC_RAZORPAY_YEARLY_URL || "https://rzp.io/rzp/6NzSdlo";
-        if (paymentLink.includes("your_")) paymentLink = "https://rzp.io/rzp/6NzSdlo";
-      }
-
-      if (!paymentLink) {
-        Alert.alert(
-          "Setup Required",
-          "Please add your Razorpay Payment Link to the .env file and restart the server."
-        );
-        setLoading(false);
+      if (!url) {
+        Alert.alert("Configuration Error", "Payment URL not found.");
         return;
       }
 
-      // Open the Razorpay Payment Link in an in-app browser
-      await WebBrowser.openBrowserAsync(paymentLink);
-
+      await WebBrowser.openBrowserAsync(url);
     } catch (error) {
       Alert.alert("Error", "Could not open payment page.");
     } finally {
@@ -66,133 +44,158 @@ export default function Pro() {
     }
   };
 
+  const features = [
+    { icon: <Zap size={20} color="#F59E0B" />, text: "Unlimited AI Interactions" },
+    { icon: <Crown size={20} color="#F59E0B" />, text: "Access to Premium Agents" },
+    { icon: <Shield size={20} color="#F59E0B" />, text: "Priority Support & Security" },
+    { icon: <Check size={20} color="#F59E0B" />, text: "Early Access to New Features" },
+  ];
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background[0] }]}>
+      <StatusBar barStyle="light-content" />
+
       {/* Background Gradient */}
       <LinearGradient
-        colors={["#0F172A", "#1E1B4B", "#312E81"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        colors={themeMode === "dark" ? ["#1E1B4B", "#0F172A"] : ["#EEF2FF", "#FFFFFF"]}
         style={StyleSheet.absoluteFill}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Header Section */}
-        <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#FFF" />
-          </TouchableOpacity>
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={[styles.backBtn, { backgroundColor: theme.cardBorder }]}
+        >
+          <ArrowLeft color={theme.textPrim} size={24} />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
+        {/* Hero Section */}
+        <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.heroContainer}>
           <View style={styles.iconContainer}>
             <LinearGradient
-              colors={["#6366F1", "#A855F7"]}
+              colors={["#6366F1", "#EC4899"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={styles.iconGradient}
             >
-              <Ionicons name="diamond" size={40} color="#FFF" />
+              <Crown size={48} color="#FFF" />
             </LinearGradient>
+            <View style={[styles.glow, { shadowColor: theme.accent }]} />
           </View>
-          <Text style={styles.title}>Upgrade to Pro</Text>
-          <Text style={styles.subtitle}>Unlock the full power of Brahma AI</Text>
+          <Text style={[styles.title, { color: theme.textPrim }]}>Upgrade to Pro</Text>
+          <Text style={[styles.subtitle, { color: theme.textSec }]}>
+            Break limits. Unlock the full potential.
+          </Text>
         </Animated.View>
 
-        {/* Benefits List */}
+        {/* Features List */}
         <View style={styles.featuresContainer}>
           {features.map((feature, index) => (
             <Animated.View
               key={index}
-              entering={FadeInDown.delay(200 + index * 100).duration(600)}
-              style={styles.featureRow}
+              entering={FadeInDown.delay(300 + index * 100).springify()}
+              style={[styles.featureRow, { borderColor: theme.cardBorder, backgroundColor: theme.cardBg }]}
             >
-              <View style={styles.checkIcon}>
-                <Ionicons name="checkmark" size={16} color="#4ADE80" />
+              <View style={[styles.featureIconBox, { backgroundColor: theme.cardBorder }]}>
+                {feature.icon}
               </View>
-              <Text style={styles.featureText}>{feature.text}</Text>
+              <Text style={[styles.featureText, { color: theme.textPrim }]}>{feature.text}</Text>
             </Animated.View>
           ))}
         </View>
 
-        {/* Pricing Plans */}
-        <Animated.View entering={FadeInUp.delay(600).duration(600)} style={styles.plansContainer}>
-          {/* Monthly Plan */}
+        {/* Billing Toggle */}
+        <Animated.View entering={FadeInDown.delay(600).duration(800)} style={styles.toggleContainer}>
           <TouchableOpacity
             style={[
-              styles.planCard,
-              selectedPlan === "monthly" && styles.selectedPlanBorder,
+              styles.toggleOption,
+              billingCycle === "monthly" && { backgroundColor: theme.cardBg, borderColor: theme.accent, borderWidth: 1 }
             ]}
-            onPress={() => setSelectedPlan("monthly")}
-            activeOpacity={0.9}
+            onPress={() => setBillingCycle("monthly")}
           >
-            <BlurView intensity={20} tint="light" style={styles.blurContainer}>
-              <View style={styles.planContent}>
-                <View>
-                  <Text style={styles.planTitle}>Monthly</Text>
-                  <Text style={styles.planPrice}>₹199<Text style={styles.perUser}>/mo</Text></Text>
-                </View>
-                {selectedPlan === "monthly" && (
-                  <Ionicons name="radio-button-on" size={24} color="#A855F7" />
-                )}
-                {selectedPlan !== "monthly" && (
-                  <Ionicons name="radio-button-off" size={24} color="#94A3B8" />
-                )}
-              </View>
-            </BlurView>
+            <Text
+              style={[
+                styles.toggleText,
+                { color: billingCycle === "monthly" ? theme.textPrim : theme.textSec }
+              ]}
+            >
+              Monthly
+            </Text>
           </TouchableOpacity>
-
-          {/* Yearly Plan - Best Value */}
           <TouchableOpacity
             style={[
-              styles.planCard,
-              selectedPlan === "yearly" && styles.selectedPlanBorder,
+              styles.toggleOption,
+              billingCycle === "yearly" && { backgroundColor: theme.cardBg, borderColor: theme.accent, borderWidth: 1 }
             ]}
-            onPress={() => setSelectedPlan("yearly")}
-            activeOpacity={0.9}
+            onPress={() => setBillingCycle("yearly")}
           >
-            {/* Best Value Badge */}
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>BEST VALUE</Text>
+            <Text
+              style={[
+                styles.toggleText,
+                { color: billingCycle === "yearly" ? theme.textPrim : theme.textSec }
+              ]}
+            >
+              Yearly
+            </Text>
+            <View style={styles.saveBadge}>
+              <Text style={styles.saveText}>SAVE 20%</Text>
             </View>
-            <BlurView intensity={selectedPlan === "yearly" ? 40 : 20} tint="light" style={styles.blurContainer}>
-              <View style={styles.planContent}>
-                <View>
-                  <Text style={styles.planTitle}>Yearly</Text>
-                  <Text style={styles.planPrice}>₹1999<Text style={styles.perUser}>/yr</Text></Text>
-                  <Text style={styles.saveText}>Save 20%</Text>
-                </View>
-                {selectedPlan === "yearly" && (
-                  <Ionicons name="radio-button-on" size={24} color="#A855F7" />
-                )}
-                {selectedPlan !== "yearly" && (
-                  <Ionicons name="radio-button-off" size={24} color="#94A3B8" />
-                )}
-              </View>
-            </BlurView>
           </TouchableOpacity>
         </Animated.View>
 
+        {/* Price Card */}
+        <Animated.View entering={FadeInDown.delay(700).duration(800)} style={styles.priceContainer}>
+          <LinearGradient
+            colors={["#1E293B", "#0F172A"]}
+            style={[styles.priceCard, { borderColor: theme.cardBorder }]}
+          >
+            <Text style={styles.priceLabel}>
+              {billingCycle === "monthly" ? "Monthly Plan" : "Yearly Plan"}
+            </Text>
+            <View style={styles.priceRow}>
+              <Text style={styles.currencySymbol}>₹</Text>
+              <Text style={styles.priceAmount}>
+                {billingCycle === "monthly" ? "199" : "1999"}
+              </Text>
+              <Text style={styles.pricePeriod}>
+                /{billingCycle === "monthly" ? "mo" : "yr"}
+              </Text>
+            </View>
+            <Text style={styles.priceSub}>
+              {billingCycle === "monthly" ? "Cancel anytime" : "Best value for power users"}
+            </Text>
+          </LinearGradient>
+        </Animated.View>
+
         {/* Subscribe Button */}
-        <Animated.View entering={FadeInUp.delay(800).duration(600)} style={styles.footer}>
+        <Animated.View entering={FadeInDown.delay(800).duration(800)} style={styles.footer}>
           <TouchableOpacity
-            style={styles.subscribeButton}
             onPress={handleSubscribe}
+            activeOpacity={0.8}
+            style={styles.subscribeBtnWrapper}
             disabled={loading}
           >
             <LinearGradient
               colors={["#6366F1", "#A855F7", "#EC4899"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={styles.gradientButton}
+              style={styles.subscribeBtn}
             >
-              {loading ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <Text style={styles.subscribeText}>
-                  {selectedPlan === "monthly" ? "Start Monthly Plan" : "Start Yearly Plan"}
-                </Text>
-              )}
+              <Text style={styles.subscribeBtnText}>
+                {loading ? "Processing..." : billingCycle === "monthly" ? "Start Monthly Subscription" : "Start Yearly Subscription"}
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
-          <Text style={styles.disclaimer}>Cancel anytime. Secure payment via Razorpay.</Text>
+          <Text style={[styles.disclaimer, { color: theme.textSec }]}>
+            Recurring billing. Cancel anytime.
+          </Text>
         </Animated.View>
-
       </ScrollView>
     </View>
   );
@@ -201,165 +204,184 @@ export default function Pro() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F172A",
-  },
-  scrollContent: {
-    paddingBottom: 40,
   },
   header: {
-    alignItems: "center",
-    paddingTop: 60,
-    paddingBottom: 30,
-    position: 'relative',
+    paddingHorizontal: 20,
+    marginBottom: 20,
   },
-  closeButton: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    zIndex: 10,
-    padding: 8,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 20,
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroContainer: {
+    alignItems: "center",
+    marginBottom: 40,
+    marginTop: 10,
   },
   iconContainer: {
+    width: 100,
+    height: 100,
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 20,
-    shadowColor: "#6366F1",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 20,
   },
   iconGradient: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: "center",
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2,
+  },
+  glow: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 30,
+    elevation: 20,
   },
   title: {
     fontSize: 32,
     fontWeight: "800",
-    color: "#FFF",
-    textAlign: "center",
-    letterSpacing: 0.5,
+    letterSpacing: -0.5,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: "#94A3B8",
     textAlign: "center",
-    marginTop: 8,
   },
   featuresContainer: {
     paddingHorizontal: 24,
-    marginBottom: 40,
+    marginBottom: 32,
+    gap: 12,
   },
   featureRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
   },
-  checkIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "rgba(74, 222, 128, 0.2)",
-    justifyContent: "center",
+  featureIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
-    marginRight: 16,
+    justifyContent: "center",
+    marginRight: 14,
   },
   featureText: {
-    fontSize: 16,
-    color: "#E2E8F0",
-    fontWeight: "500",
-  },
-  plansContainer: {
-    paddingHorizontal: 24,
-    marginBottom: 30,
-    gap: 16,
-  },
-  planCard: {
-    borderRadius: 24,
-    overflow: "hidden",
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.05)",
-    backgroundColor: "rgba(255,255,255,0.03)",
-  },
-  selectedPlanBorder: {
-    borderColor: "#A855F7",
-    backgroundColor: "rgba(168, 85, 247, 0.1)",
-  },
-  blurContainer: {
-    padding: 20,
-  },
-  planContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  planTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "600",
-    color: "#94A3B8",
-    marginBottom: 4,
   },
-  planPrice: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#FFF",
+  toggleContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    padding: 4,
+    borderRadius: 16,
+    marginHorizontal: 24,
+    marginBottom: 24,
   },
-  perUser: {
-    fontSize: 16,
-    color: "#64748B",
-    fontWeight: "500",
+  toggleOption: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderRadius: 12,
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  toggleText: {
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  saveBadge: {
+    backgroundColor: "#10B981",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginLeft: 6,
   },
   saveText: {
-    color: "#4ADE80",
-    fontSize: 14,
-    fontWeight: "600",
-    marginTop: 4,
-  },
-  badge: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    backgroundColor: "#A855F7",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderBottomLeftRadius: 16,
-    zIndex: 10,
-  },
-  badgeText: {
-    color: "#FFF",
+    color: "#fff",
     fontSize: 10,
     fontWeight: "800",
   },
+  priceContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 32,
+  },
+  priceCard: {
+    padding: 24,
+    borderRadius: 24,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  priceLabel: {
+    color: "#94A3B8",
+    fontSize: 14,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    marginBottom: 8,
+  },
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    marginBottom: 8,
+  },
+  currencySymbol: {
+    color: "#fff",
+    fontSize: 24,
+    fontWeight: "600",
+    marginBottom: 6,
+    marginRight: 2,
+  },
+  priceAmount: {
+    color: "#fff",
+    fontSize: 48,
+    fontWeight: "800",
+  },
+  pricePeriod: {
+    color: "#94A3B8",
+    fontSize: 16,
+    fontWeight: "500",
+    marginBottom: 8,
+  },
+  priceSub: {
+    color: "#CBD5E1",
+    fontSize: 13,
+  },
   footer: {
     paddingHorizontal: 24,
+    alignItems: "center",
   },
-  subscribeButton: {
-    borderRadius: 20,
-    overflow: "hidden",
-    shadowColor: "#A855F7",
+  subscribeBtnWrapper: {
+    width: "100%",
+    shadowColor: "#8B5CF6",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 16,
-    elevation: 20,
+    elevation: 8,
+    marginBottom: 16,
   },
-  gradientButton: {
+  subscribeBtn: {
     paddingVertical: 18,
+    borderRadius: 16,
     alignItems: "center",
-    justifyContent: "center",
   },
-  subscribeText: {
-    fontSize: 18,
+  subscribeBtnText: {
+    color: "#fff",
+    fontSize: 16,
     fontWeight: "700",
-    color: "#FFF",
     letterSpacing: 0.5,
   },
   disclaimer: {
-    marginTop: 16,
-    textAlign: "center",
-    color: "#64748B",
     fontSize: 12,
   },
 });

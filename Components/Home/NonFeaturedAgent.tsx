@@ -1,22 +1,24 @@
 import React from "react";
 import { Image, Text, View } from "react-native";
+import { useTheme } from "../../app/shared/ThemeContext";
 import { agent } from "./AgentCard";
 
 export default function NonFeaturedAgent({ agent }: { agent: agent }) {
+    const { theme } = useTheme();
     return (
         <View
             style={{
-                backgroundColor: "#1E293B",
+                backgroundColor: theme.cardBg,
                 borderRadius: 18,
                 padding: 16,
-                minHeight: 210,   // 🔥 fixed height same as AgentCard
+                minHeight: 210,
                 shadowColor: "#000",
-                shadowOpacity: 0.3,
+                shadowOpacity: 0.1,
                 shadowRadius: 4,
                 elevation: 3,
                 justifyContent: "space-between",
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.05)",
+                borderColor: theme.cardBorder,
             }}
         >
             <Image
@@ -30,7 +32,7 @@ export default function NonFeaturedAgent({ agent }: { agent: agent }) {
                     fontWeight: "700",
                     textAlign: "center",
                     marginTop: 10,
-                    color: "#F8FAFC",
+                    color: theme.textPrim,
                 }}
             >
                 {agent.name}
@@ -39,7 +41,7 @@ export default function NonFeaturedAgent({ agent }: { agent: agent }) {
             <Text
                 numberOfLines={2}
                 style={{
-                    color: "#94A3B8",
+                    color: theme.textSec,
                     fontSize: 13,
                     textAlign: "center",
                     marginTop: 4,

@@ -1,5 +1,6 @@
 import React from "react";
 import { Image, Text, View } from "react-native";
+import { useTheme } from "../../app/shared/ThemeContext";
 
 export type agent = {
   id: number;
@@ -13,35 +14,37 @@ export type agent = {
 };
 
 export default function AgentCard({ agent }: { agent: agent }) {
+  const { theme } = useTheme();
+
   return (
     <View
       style={{
-        backgroundColor: "#1E293B",
+        backgroundColor: theme.cardBg,
         borderRadius: 18,
         padding: 16,
         minHeight: 210,
         justifyContent: "space-between",
         shadowColor: "#000",
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.1,
         shadowRadius: 5,
         elevation: 4,
         borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.05)",
+        borderColor: theme.cardBorder,
       }}
     >
-      <Text style={{ fontSize: 18, fontWeight: "800", color: "#F8FAFC" }}>
+      <Text style={{ fontSize: 18, fontWeight: "800", color: theme.textPrim }}>
         {agent.name}
       </Text>
 
       <Text
         numberOfLines={2}
-        style={{ color: "#94A3B8", marginTop: 6, fontSize: 14 }}
+        style={{ color: theme.textSec, marginTop: 6, fontSize: 14 }}
       >
         {agent.desc}
       </Text>
 
       <Image
-        source={agent.image}   // <-- FIXED (no fallback)
+        source={agent.image}
         style={{
           width: 90,
           height: 90,

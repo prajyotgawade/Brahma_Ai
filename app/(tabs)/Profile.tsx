@@ -1,6 +1,6 @@
 import { useClerk, useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import { Clock, Compass, LogOut, PlusCircle } from "lucide-react-native";
+import { Clock, Compass, LogOut, PlusCircle, Settings } from "lucide-react-native";
 import React from "react";
 import {
   Image,
@@ -11,29 +11,33 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTheme } from "../shared/ThemeContext";
 
-type AppRoutes = "/create-agent" | "/(tabs)/Explore" | "/(tabs)/History";
+type AppRoutes = "/create-agent" | "/(tabs)/Explore" | "/(tabs)/History" | "/Settings";
 
 type MenuItem = {
   title: string;
-  icon: React.ReactNode;
+  icon: (color: string) => React.ReactNode;
   path?: AppRoutes;
+  action?: string;
 };
-
-const menuItems: MenuItem[] = [
-  { title: "Create Agent", icon: <PlusCircle size={22} color="#A855F7" />, path: "/create-agent" },
-  { title: "Explore", icon: <Compass size={22} color="#A855F7" />, path: "/(tabs)/Explore" },
-  { title: "My History", icon: <Clock size={22} color="#A855F7" />, path: "/(tabs)/History" },
-  { title: "Logout", icon: <LogOut size={22} color="#EF4444" /> },
-];
 
 export default function ProfileScreen() {
   const { user } = useUser();
   const router = useRouter();
   const { signOut } = useClerk();
+  const { theme, themeMode } = useTheme();
 
-  const OnMenuClick = async (item: MenuItem) => {
-    if (item.title === "Logout") {
+  const menuItems: MenuItem[] = [
+    { title: "Create Agent", icon: (c) => <PlusCircle size={22} color={c} />, path: "/create-agent" },
+    { title: "Explore", icon: (c) => <Compass size={22} color={c} />, path: "/(tabs)/Explore" },
+    { title: "My History", icon: (c) => <Clock size={22} color={c} />, path: "/(tabs)/History" },
+    { title: "Settings", icon: (c) => <Settings size={22} color={c} />, path: "/Settings" },
+    { title: "Logout", icon: (c) => <LogOut size={22} color={theme.danger} />, action: "logout" },
+  ];
+
+  const handleMenuClick = async (item: MenuItem) => {
+    if (item.action === "logout") {
       await signOut();
       router.replace("/");
       return;
@@ -46,34 +50,43 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <ScrollView style={[styles.container, { backgroundColor: theme.background[0] }]}>
+      <StatusBar barStyle={themeMode === "dark" ? "light-content" : "dark-content"} />
 
       {/* HEADER */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
+      <View style={[styles.header, { backgroundColor: theme.background[1], borderColor: theme.cardBorder }]}>
+        <Text style={[styles.headerTitle, { color: theme.textPrim }]}>Profile</Text>
 
         <View style={styles.profileWrapper}>
           <Image
             source={{ uri: user?.imageUrl as string }}
-            style={styles.profileImage}
+            style={[styles.profileImage, { borderColor: theme.accent }]}
           />
-          <Text style={styles.emailText}>
+          <Text style={[styles.emailText, { color: theme.textSec }]}>
             {user?.primaryEmailAddress?.emailAddress}
           </Text>
         </View>
       </View>
 
       {/* MENU CARD */}
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: theme.cardBg, borderColor: theme.cardBorder }]}>
+
         {menuItems.map((item, index) => (
           <TouchableOpacity
             key={index}
-            style={styles.menuItem}
-            onPress={() => OnMenuClick(item)}
+            style={[
+              styles.menuItem,
+              { borderBottomColor: theme.cardBorder },
+              index === menuItems.length - 1 && { borderBottomWidth: 0 }
+            ]}
+            onPress={() => handleMenuClick(item)}
           >
-            {item.icon}
-            <Text style={styles.menuText}>{item.title}</Text>
+            <View style={styles.menuItemLeft}>
+              {item.icon(item.title === "Logout" ? theme.danger : theme.accent)}
+              <Text style={[styles.menuText, { color: item.title === "Logout" ? theme.danger : theme.textPrim }]}>
+                {item.title}
+              </Text>
+            </View>
           </TouchableOpacity>
         ))}
       </View>
@@ -84,49 +97,36 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F172A",
   },
-
   header: {
-    backgroundColor: "#1E1B4B",
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 35,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
     borderTopWidth: 0,
   },
-
   headerTitle: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#F8FAFC",
     marginBottom: 18,
   },
-
   profileWrapper: {
     alignItems: "center",
   },
-
   profileImage: {
     width: 95,
     height: 95,
     borderRadius: 48,
     borderWidth: 3,
-    borderColor: "#A855F7",
     marginBottom: 10,
   },
-
   emailText: {
     fontSize: 16,
-    color: "#E2E8F0",
     fontWeight: "500",
   },
-
   card: {
-    backgroundColor: "#1E293B",
     marginHorizontal: 20,
     marginTop: -20,
     borderRadius: 18,
@@ -134,24 +134,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     elevation: 6,
     shadowColor: "#000",
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.1,
     shadowRadius: 6,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
   },
-
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 14,
-    borderBottomColor: "rgba(255,255,255,0.05)",
+    justifyContent: "space-between",
+    paddingVertical: 16,
     borderBottomWidth: 1,
   },
-
+  menuItemLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   menuText: {
     fontSize: 16,
     marginLeft: 15,
-    color: "#F8FAFC",
     fontWeight: "600",
   },
 });

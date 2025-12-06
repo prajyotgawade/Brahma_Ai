@@ -3,9 +3,11 @@ import { Tabs } from "expo-router";
 import React from "react";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTheme } from "../shared/ThemeContext";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
 
   // if gesture navigation is enabled -> positive inset, else -> 0
   const bottomSpacing = insets.bottom > 0 ? insets.bottom + 10 : 20;
@@ -15,8 +17,8 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
-        tabBarActiveTintColor: "#A855F7",
-        tabBarInactiveTintColor: "#94A3B8",
+        tabBarActiveTintColor: theme.accent,
+        tabBarInactiveTintColor: theme.textSec,
 
         tabBarStyle: {
           position: "absolute",
@@ -25,19 +27,19 @@ export default function TabLayout() {
           right: 20,
           height: 68,
           borderRadius: 28,
-          backgroundColor: "#0F172A",
+          backgroundColor: theme.cardBg,
           borderTopWidth: 0,
           paddingBottom: Platform.OS === "ios" ? 12 : 8,
           paddingTop: 10,
 
           // shadow / elevation
-          shadowColor: "#A855F7",
+          shadowColor: theme.accent,
           shadowOpacity: 0.3,
           shadowRadius: 10,
           shadowOffset: { width: 0, height: 4 },
           elevation: 10,
           borderWidth: 1,
-          borderColor: "rgba(255,255,255,0.1)",
+          borderColor: theme.cardBorder,
         },
       }}
     >

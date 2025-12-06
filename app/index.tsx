@@ -8,6 +8,7 @@ import { doc, setDoc } from "firebase/firestore";
 import React, { useCallback, useEffect } from "react";
 import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { useTheme } from "./shared/ThemeContext";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -23,6 +24,7 @@ function useWarmBrowser() {
 export default function Index() {
   useWarmBrowser();
   const router = useRouter();
+  const { theme } = useTheme();
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
   const { user, isSignedIn } = useUser();
 
@@ -68,7 +70,7 @@ export default function Index() {
   }, [user]);
 
   return (
-    <LinearGradient colors={["#0F172A", "#1E1B4B", "#312E81"]} style={styles.container}>
+    <LinearGradient colors={theme.background} style={styles.container}>
       <View style={styles.content}>
         <Animated.View entering={FadeInDown.delay(100).duration(1000).springify()}>
           <Image
@@ -79,11 +81,11 @@ export default function Index() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(300).duration(1000).springify()}>
-          <Text style={styles.title}>Welcome to <Text style={styles.highlight}>Brahma AI</Text></Text>
+          <Text style={[styles.title, { color: theme.textPrim }]}>Welcome to <Text style={[styles.highlight, { color: theme.accent }]}>Brahma AI</Text></Text>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(500).duration(1000).springify()}>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.subtitle, { color: theme.textSec }]}>
             Your Ultimate AI Personal Agent to make life easier. Try it Today, Completely Free!
           </Text>
         </Animated.View>
@@ -109,9 +111,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", alignItems: "center" },
   content: { alignItems: "center", width: "90%" },
   image: { width: 380, height: 380, marginBottom: 20 },
-  title: { fontSize: 32, fontWeight: "800", color: "#F8FAFC", textAlign: "center", letterSpacing: 0.5 },
-  highlight: { color: "#A855F7" },
-  subtitle: { fontSize: 16, textAlign: "center", color: "#CBD5E1", marginBottom: 40, marginTop: 10, lineHeight: 24, paddingHorizontal: 10 },
+  title: { fontSize: 32, fontWeight: "800", textAlign: "center", letterSpacing: 0.5 },
+  highlight: {}, // Color handled dynamically
+  subtitle: { fontSize: 16, textAlign: "center", marginBottom: 40, marginTop: 10, lineHeight: 24, paddingHorizontal: 10 },
   buttonContainer: { width: "100%", alignItems: 'center' },
   buttonShadow: {
     width: "85%",

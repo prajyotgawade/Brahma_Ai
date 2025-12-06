@@ -6,16 +6,18 @@ import { collection, deleteDoc, doc, onSnapshot, query, where } from "firebase/f
 import { Trash2 } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTheme } from "../../../app/shared/ThemeContext";
 
 type Agent = {
   agentName: string;
   agentId: string;
-  propmt: string;
+  prompt: string;
   emoji: string;
 };
 
 export default function UserCreatedAgentList() {
   const { user } = useUser();
+  const { theme } = useTheme();
   const [agentList, setAgentList] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -42,7 +44,8 @@ export default function UserCreatedAgentList() {
     }, (error) => {
       console.log("Error fetching agents:", error);
       setLoading(false);
-    });
+    },
+    );
 
     return () => unsubscribe();
   }, [user]);
@@ -72,7 +75,7 @@ export default function UserCreatedAgentList() {
 
   return (
     <View style={{ marginBottom: 15 }}>
-      <Text style={styles.title}>My Agents / Assistants</Text>
+      <Text style={[styles.title, { color: theme.textPrim }]}>My Agents / Assistants</Text>
 
       <FlatList
         data={agentList}
@@ -80,14 +83,14 @@ export default function UserCreatedAgentList() {
         scrollEnabled={false}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.card}
+            style={[styles.card, { backgroundColor: theme.cardBg, borderColor: theme.cardBorder }]}
             onPress={() =>
               router.push({
                 pathname: "/chat",
                 params: {
                   agentName: item.agentName,
                   initialText: "",
-                  agentPrompt: item.propmt,
+                  agentPrompt: item.prompt,
                   agentId: item.agentId,
                 },
               })
@@ -95,7 +98,7 @@ export default function UserCreatedAgentList() {
           >
             <View style={styles.row}>
               <Text style={styles.emoji}>{item.emoji}</Text>
-              <Text style={styles.agentName}>{item.agentName}</Text>
+              <Text style={[styles.agentName, { color: theme.textPrim }]}>{item.agentName}</Text>
             </View>
 
             <View style={styles.actionRow}>
@@ -106,9 +109,9 @@ export default function UserCreatedAgentList() {
                 }}
                 style={styles.deleteBtn}
               >
-                <Trash2 size={20} color="#EF4444" />
+                <Trash2 size={20} color={theme.danger} />
               </TouchableOpacity>
-              <ArrowRight width={20} height={20} color="#94A3B8" />
+              <ArrowRight width={20} height={20} color={theme.textSec} />
             </View>
           </TouchableOpacity>
         )}
@@ -121,7 +124,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#F8FAFC",
     marginBottom: 10,
   },
 
@@ -131,13 +133,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 14,
     borderRadius: 16,
-    backgroundColor: "#1E293B",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
     marginTop: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3,
   },
@@ -155,7 +155,6 @@ const styles = StyleSheet.create({
   agentName: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#F8FAFC",
   },
 
   actionRow: {

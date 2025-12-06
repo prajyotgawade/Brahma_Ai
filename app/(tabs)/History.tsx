@@ -6,10 +6,12 @@ import { MessageCircle } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Animated, Platform, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTheme } from "../shared/ThemeContext";
 
 export default function History() {
   const { user } = useUser();
   const router = useRouter();
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [historyList, setHistoryList] = useState<any[]>([]);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -67,7 +69,7 @@ export default function History() {
     });
 
     const lastMessage = item.messages?.[item.messages.length - 1];
-    let icon = <MessageCircle size={28} color="#F8FAFC" />;
+    let icon = <MessageCircle size={28} color={theme.textPrim} />;
 
     if (item.emoji) icon = <Text style={{ fontSize: 22 }}>{item.emoji}</Text>;
     else if (lastMessage?.emoji) icon = <Text style={{ fontSize: 22 }}>{lastMessage.emoji}</Text>;
@@ -79,24 +81,24 @@ export default function History() {
           style={{
             flexDirection: "row",
             padding: 15,
-            backgroundColor: "#1E293B",
+            backgroundColor: theme.cardBg,
             marginBottom: 12,
             borderRadius: 16,
             alignItems: "center",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
+            shadowOpacity: 0.1,
             shadowRadius: 6,
             elevation: 3,
             borderWidth: 1,
-            borderColor: "rgba(255,255,255,0.05)",
+            borderColor: theme.cardBorder,
           }}
         >
           <View
             style={{
               width: 50,
               height: 50,
-              backgroundColor: "rgba(255,255,255,0.1)",
+              backgroundColor: theme.cardBorder,
               borderRadius: 12,
               alignItems: "center",
               justifyContent: "center",
@@ -107,8 +109,8 @@ export default function History() {
           </View>
 
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 18, fontWeight: "600", color: "#F8FAFC" }}>{item.agentName}</Text>
-            <Text numberOfLines={2} style={{ fontSize: 14, color: "#94A3B8", marginTop: 4 }}>
+            <Text style={{ fontSize: 18, fontWeight: "600", color: theme.textPrim }}>{item.agentName}</Text>
+            <Text numberOfLines={2} style={{ fontSize: 14, color: theme.textSec, marginTop: 4 }}>
               {lastMessage?.content?.[0]?.text ?? "No messages"}
             </Text>
           </View>
@@ -120,29 +122,29 @@ export default function History() {
   const TAB_BAR_HEIGHT = Platform.OS === "ios" ? 80 : 70;
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#0F172A" }}>
+    <View style={{ flex: 1, backgroundColor: theme.background[0] }}>
       {/* Header */}
       <View
         style={{
           paddingTop: 40,
           paddingBottom: 20,
           paddingHorizontal: 20,
-          backgroundColor: "#1E1B4B",
+          backgroundColor: theme.background[1],
           borderBottomLeftRadius: 24,
           borderBottomRightRadius: 24,
           borderWidth: 1,
-          borderColor: "rgba(255,255,255,0.05)",
+          borderColor: theme.cardBorder,
           borderTopWidth: 0,
         }}
       >
-        <Text style={{ fontSize: 26, fontWeight: "700", color: "#F8FAFC" }}>Chat History</Text>
-        <Text style={{ fontSize: 14, color: "#94A3B8", marginTop: 4 }}>Your recent conversations</Text>
+        <Text style={{ fontSize: 26, fontWeight: "700", color: theme.textPrim }}>Chat History</Text>
+        <Text style={{ fontSize: 14, color: theme.textSec, marginTop: 4 }}>Your recent conversations</Text>
       </View>
 
       {/* Chat List */}
       {loading ? (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color="#A855F7" />
+          <ActivityIndicator size="large" color={theme.accent} />
         </View>
       ) : (
         <View style={{ flex: 1 }}>

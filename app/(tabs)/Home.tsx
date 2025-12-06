@@ -13,11 +13,13 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AgentListComponent from "../../Components/Home/AgentListComponent";
 import CreateAgentBanner from "../../Components/Home/CreateAgentBanner";
+import { useTheme } from "../shared/ThemeContext";
 
 export default function Home() {
   const navigation = useNavigation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { theme, themeMode } = useTheme();
 
   // Hide the default header
   React.useEffect(() => {
@@ -33,11 +35,14 @@ export default function Home() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar backgroundColor="#1E1B4B" barStyle="light-content" />
+    <View style={[styles.container, { backgroundColor: theme.background[0] }]}>
+      <StatusBar backgroundColor={theme.background[1]} barStyle={themeMode === "dark" ? "light-content" : "dark-content"} />
 
       {/* Fixed Header */}
-      <View style={[styles.headerWrapper, { paddingTop: insets.top + 10 }]}>
+      <View style={[
+        styles.headerWrapper,
+        { paddingTop: insets.top + 10, backgroundColor: theme.background[1], borderColor: theme.cardBorder }
+      ]}>
         <View style={styles.headerRow}>
 
           {/* Pro Badge */}
@@ -58,20 +63,19 @@ export default function Home() {
 
           {/* Title & Subtitle */}
           <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Brahma AI</Text>
-            <Text style={styles.headerSubtitle}>Your AI Agent</Text>
+            <Text style={[styles.headerTitle, { color: theme.textPrim }]}>Brahma AI</Text>
+            <Text style={[styles.headerSubtitle, { color: theme.textSec }]}>Your AI Agent</Text>
           </View>
 
           {/* Settings Button */}
           <TouchableOpacity
-            style={styles.settingsButton}
+            style={[styles.settingsButton, { backgroundColor: theme.cardBg }]}
             onPress={handleSettingsPress}
             activeOpacity={0.7}
           >
             <Image
               source={require("../../assets/images/settings.png")}
-              style={styles.settingsIcon}
-              tintColor={'#FFF'}
+              style={[styles.settingsIcon, { tintColor: theme.textPrim }]}
             />
           </TouchableOpacity>
 
@@ -103,7 +107,6 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F172A",
   },
   scrollContainer: {
     flex: 1,
@@ -116,7 +119,6 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#1E1B4B",
     paddingTop: 35,
     paddingBottom: 16,
     paddingHorizontal: 20,
@@ -124,12 +126,11 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 24,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 6,
     zIndex: 1000,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
     borderTopWidth: 0,
   },
   headerRow: {
@@ -143,11 +144,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#fff",
   },
   headerSubtitle: {
     fontSize: 14,
-    color: "#94A3B8",
     marginTop: 2,
   },
   proBadge: {
@@ -169,7 +168,6 @@ const styles = StyleSheet.create({
   },
   settingsButton: {
     padding: 8,
-    backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 12,
   },
   settingsIcon: {
@@ -177,4 +175,3 @@ const styles = StyleSheet.create({
     height: 22,
   },
 });
-

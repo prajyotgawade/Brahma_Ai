@@ -27,6 +27,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { firestoreDb, storage } from "../../config/Firebaseconfig";
 import { AIChatModel } from "../shared/GlobalApi";
+import { useTheme } from "../shared/ThemeContext";
 
 type Message = {
   role: string;
@@ -71,7 +72,7 @@ const ScaleButton = ({ onPress, style, children, disabled }: any) => {
 };
 
 // --- Optimized Message Component ---
-const MessageItem = React.memo(({ item, index, onCopy }: { item: Message, index: number, onCopy: (text: string) => void }) => {
+const MessageItem = React.memo(({ item, index, onCopy, styles, theme }: { item: Message, index: number, onCopy: (text: string) => void, styles: any, theme: any }) => {
   const isUser = item.role === "user";
   const text = item.content?.find((c) => c.type === "text")?.text || "";
   const image = item.content?.find((c) => c.type === "image_url")?.image_url?.url || null;
@@ -110,7 +111,7 @@ const MessageItem = React.memo(({ item, index, onCopy }: { item: Message, index:
     >
       {!isUser && (
         <View style={styles.botAvatar}>
-          <Sparkles size={16} color="#C084FC" />
+          <Sparkles size={16} color={theme.accent} />
         </View>
       )}
 
@@ -118,7 +119,7 @@ const MessageItem = React.memo(({ item, index, onCopy }: { item: Message, index:
         {isUser ? (
           <View style={{ alignItems: 'flex-end' }}>
             <LinearGradient
-              colors={["#6366F1", "#A855F7"]}
+              colors={[theme.accent, "#A855F7"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={[styles.messageBubble, styles.userBubble]}
@@ -137,7 +138,7 @@ const MessageItem = React.memo(({ item, index, onCopy }: { item: Message, index:
                 onPress={() => onCopy(text)}
                 hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
               >
-                <Copy size={14} color="#64748B" />
+                <Copy size={14} color={theme.textSec} />
               </TouchableOpacity>
             </View>
           </View>
@@ -152,6 +153,9 @@ export default function ChatUI() {
   const { agentName, agentPrompt, agentId, chatId, messageList } = useLocalSearchParams();
   const { user } = useUser();
   const insets = useSafeAreaInsets();
+  const { theme, themeMode } = useTheme();
+
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
@@ -325,11 +329,11 @@ export default function ChatUI() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
+      <StatusBar style={themeMode === 'dark' ? "light" : "dark"} />
 
       {/* Premium Background Gradient */}
       <LinearGradient
-        colors={['#020617', '#0F172A', '#1E1B4B']}
+        colors={theme.background as any}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -338,13 +342,13 @@ export default function ChatUI() {
       {/* Custom Premium Header */}
       <Animated.View style={[styles.header, { paddingTop: insets.top + 8, opacity: fadeAnim }]}>
         <ScaleButton onPress={() => navigation.goBack()} style={styles.iconButton}>
-          <ArrowLeft color="#F8FAFC" size={20} />
+          <ArrowLeft color={theme.textPrim} size={20} />
         </ScaleButton>
 
         <View style={styles.headerTitleContainer}>
           <Text style={styles.headerTitle} numberOfLines={1}>{agentName || "Chat"}</Text>
           <View style={styles.statusBadge}>
-            <View style={[styles.statusDot, { backgroundColor: isTyping ? "#A855F7" : "#22C55E" }]} />
+            <View style={[styles.statusDot, { backgroundColor: isTyping ? theme.accent : theme.success }]} />
             <Text style={styles.headerStatus}>
               {isTyping ? "AI is typing..." : "Active"}
             </Text>
@@ -352,7 +356,7 @@ export default function ChatUI() {
         </View>
 
         <ScaleButton onPress={() => setShowMenu(true)} style={styles.iconButton}>
-          <Plus color="#F8FAFC" size={24} />
+          <Plus color={theme.textPrim} size={24} />
         </ScaleButton>
       </Animated.View>
 
@@ -371,12 +375,12 @@ export default function ChatUI() {
                 opacity: menuAnim
               }]}>
                 <TouchableOpacity style={styles.menuItem} onPress={handleClearChat}>
-                  <Trash2 size={16} color="#EF4444" style={{ marginRight: 10 }} />
-                  <Text style={[styles.menuText, { color: "#EF4444" }]}>Clear Chat</Text>
+                  <Trash2 size={16} color={theme.danger} style={{ marginRight: 10 }} />
+                  <Text style={[styles.menuText, { color: theme.danger }]}>Clear Chat</Text>
                 </TouchableOpacity>
                 <View style={styles.menuDivider} />
                 <TouchableOpacity style={styles.menuItem} onPress={() => setShowMenu(false)}>
-                  <RotateCcw size={16} color="#94A3B8" style={{ marginRight: 10 }} />
+                  <RotateCcw size={16} color={theme.textSec} style={{ marginRight: 10 }} />
                   <Text style={styles.menuText}>Restart Agent</Text>
                 </TouchableOpacity>
               </Animated.View>
@@ -400,7 +404,15 @@ export default function ChatUI() {
             paddingBottom: 40,
             paddingTop: 16
           }}
-          renderItem={({ item, index }) => <MessageItem item={item} index={index} onCopy={copyToClipboard} />}
+          renderItem={({ item, index }) =>
+            <MessageItem
+              item={item}
+              index={index}
+              onCopy={copyToClipboard}
+              styles={styles}
+              theme={theme}
+            />
+          }
           showsVerticalScrollIndicator={false}
         />
 
@@ -425,7 +437,7 @@ export default function ChatUI() {
             },
           ]}
         >
-          <Sparkles size={16} color="#4ADE80" style={{ marginRight: 8 }} />
+          <Sparkles size={16} color={theme.success} style={{ marginRight: 8 }} />
           <Text style={styles.toastText}>Copied to clipboard!</Text>
         </Animated.View>
 
@@ -439,7 +451,7 @@ export default function ChatUI() {
         ]}>
           <View style={styles.inputInnerRow}>
             <ScaleButton onPress={pickImage} style={styles.attachButton}>
-              <ImageIcon size={22} color="#94A3B8" />
+              <ImageIcon size={22} color={theme.textSec} />
             </ScaleButton>
 
             <View style={styles.inputWrapper}>
@@ -447,7 +459,7 @@ export default function ChatUI() {
                 value={inputText}
                 onChangeText={setInputText}
                 placeholder="Message..."
-                placeholderTextColor="#64748B"
+                placeholderTextColor={theme.textSec}
                 style={styles.input}
                 multiline
                 maxLength={500}
@@ -471,10 +483,10 @@ export default function ChatUI() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#020617",
+    backgroundColor: theme.background[0],
   },
   header: {
     flexDirection: "row",
@@ -482,20 +494,20 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: "rgba(15, 23, 42, 0.8)", // More transparency for glass effect
+    backgroundColor: theme.cardBg, // Using cardBg for header to match theme
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.08)",
+    borderBottomColor: theme.cardBorder,
     zIndex: 10,
   },
   iconButton: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: theme.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+    borderColor: theme.cardBorder,
   },
   headerTitleContainer: {
     position: 'absolute',
@@ -508,14 +520,14 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#F8FAFC",
+    color: theme.textPrim,
     marginBottom: 4,
     letterSpacing: 0.3,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: "rgba(71, 85, 105, 0.4)",
+    backgroundColor: theme.cardBorder, // "rgba(71, 85, 105, 0.4)",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,
@@ -528,7 +540,7 @@ const styles = StyleSheet.create({
   },
   headerStatus: {
     fontSize: 11,
-    color: "#E2E8F0",
+    color: theme.textSec,
     fontWeight: '500',
   },
   /* Menu */
@@ -540,11 +552,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 20,
     width: 180,
-    backgroundColor: "#1E293B",
+    backgroundColor: theme.cardBg,
     borderRadius: 20,
     padding: 8,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: theme.cardBorder,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.5,
@@ -558,13 +570,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   menuText: {
-    color: "#E2E8F0",
+    color: theme.textSec,
     fontSize: 15,
     fontWeight: "500",
   },
   menuDivider: {
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: theme.cardBorder,
     marginVertical: 4,
   },
   /* Chat */
@@ -577,12 +589,12 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 12,
-    backgroundColor: "#1E293B",
+    backgroundColor: theme.cardBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
     borderWidth: 1,
-    borderColor: "rgba(168, 85, 247, 0.2)",
+    borderColor: theme.cardBorder,
   },
   messageBubble: {
     paddingHorizontal: 16,
@@ -599,9 +611,9 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 4,
   },
   botBubble: {
-    backgroundColor: "#1E293B",
+    backgroundColor: theme.cardBg,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
+    borderColor: theme.cardBorder,
     borderBottomLeftRadius: 4,
   },
   userText: {
@@ -611,7 +623,7 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
   botText: {
-    color: "#E2E8F0",
+    color: theme.textPrim,
     fontSize: 16,
     lineHeight: 24,
     fontWeight: "300",
@@ -634,13 +646,13 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
     backgroundColor: "rgba(0,0,0,0.3)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: theme.cardBorder,
   },
   /* Input Section */
   inputContainer: {
-    backgroundColor: "#020617",
+    backgroundColor: theme.background[0],
     borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.08)",
+    borderTopColor: theme.cardBorder,
     paddingHorizontal: 16,
   },
   inputInnerRow: {
@@ -652,37 +664,37 @@ const styles = StyleSheet.create({
     marginRight: 8,
     marginBottom: 2,
     borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: theme.cardBorder,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
+    borderColor: theme.cardBorder,
   },
   inputWrapper: {
     flex: 1,
-    backgroundColor: "#0F172A",
+    backgroundColor: theme.cardBg,
     borderRadius: 26,
     paddingHorizontal: 16,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
     marginRight: 10,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: theme.cardBorder,
     minHeight: 48, // Slightly taller
     justifyContent: 'center',
   },
   input: {
-    color: "#F8FAFC",
+    color: theme.textPrim,
     fontSize: 16,
     maxHeight: 120,
     lineHeight: 22,
     textAlignVertical: 'center',
   },
   sendButton: {
-    backgroundColor: "#6366F1",
+    backgroundColor: theme.accent,
     width: 46, // Slightly larger
     height: 46,
     borderRadius: 23,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: "#6366F1",
+    shadowColor: theme.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.5,
     shadowRadius: 10,
@@ -691,7 +703,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.2)",
   },
   sendButtonDisabled: {
-    backgroundColor: "#1E293B",
+    backgroundColor: theme.cardBg,
     shadowOpacity: 0,
     elevation: 0,
     opacity: 0.5,
@@ -702,11 +714,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 90,
     left: 20,
-    backgroundColor: "#1E293B",
+    backgroundColor: theme.cardBg,
     padding: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: theme.cardBorder,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.4,
@@ -722,20 +734,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -6,
     right: -6,
-    backgroundColor: "#EF4444",
+    backgroundColor: theme.danger,
     borderRadius: 12,
     width: 24,
     height: 24,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: "#1E293B",
+    borderColor: theme.cardBg,
   },
   toast: {
     position: 'absolute',
     top: 130, // Lowered slightly
     alignSelf: 'center',
-    backgroundColor: "rgba(15, 23, 42, 0.95)",
+    backgroundColor: theme.cardBg,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 30,
@@ -743,14 +755,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
+    borderColor: theme.cardBorder,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.4,
     shadowRadius: 20,
   },
   toastText: {
-    color: "#FFF",
+    color: theme.textPrim,
     fontWeight: "600",
     fontSize: 14,
   },
