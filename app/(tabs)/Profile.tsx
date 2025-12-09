@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useTheme } from "../shared/ThemeContext";
+import { useTheme } from "../../shared/ThemeContext";
 
 type AppRoutes = "/create-agent" | "/(tabs)/Explore" | "/(tabs)/History" | "/Settings";
 

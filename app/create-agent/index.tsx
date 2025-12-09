@@ -18,7 +18,7 @@ import {
   View
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { useTheme } from "../shared/ThemeContext";
+import { useTheme } from "../../shared/ThemeContext";
 
 export default function CreateAgent() {
   const router = useRouter();

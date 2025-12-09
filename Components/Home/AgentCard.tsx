@@ -1,6 +1,6 @@
 import React from "react";
 import { Image, Text, View } from "react-native";
-import { useTheme } from "../../app/shared/ThemeContext";
+import { useTheme } from "../../shared/ThemeContext";
 
 export type agent = {
   id: number;

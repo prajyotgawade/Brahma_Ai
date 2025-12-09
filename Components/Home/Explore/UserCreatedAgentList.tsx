@@ -6,7 +6,7 @@ import { collection, deleteDoc, doc, onSnapshot, query, where } from "firebase/f
 import { Trash2 } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useTheme } from "../../../app/shared/ThemeContext";
+import { useTheme } from "../../../shared/ThemeContext";
 
 type Agent = {
   agentName: string;

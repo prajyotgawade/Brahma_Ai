@@ -3,7 +3,7 @@ import { Tabs } from "expo-router";
 import React from "react";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme } from "../shared/ThemeContext";
+import { useTheme } from "../../shared/ThemeContext";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();

@@ -11,7 +11,7 @@ import {
     View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme } from "./shared/ThemeContext";
+import { useTheme } from "../shared/ThemeContext";
 
 export default function SettingsScreen() {
     const router = useRouter();

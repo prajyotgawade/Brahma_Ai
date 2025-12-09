@@ -1,7 +1,7 @@
 import { ClerkProvider } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { Stack } from "expo-router";
-import { ThemeProvider } from "./shared/ThemeContext";
+import { ThemeProvider } from "../shared/ThemeContext";
 
 export default function RootLayout() {
   return (

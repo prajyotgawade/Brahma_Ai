@@ -8,7 +8,7 @@ import { doc, setDoc } from "firebase/firestore";
 import React, { useCallback, useEffect } from "react";
 import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { useTheme } from "./shared/ThemeContext";
+import { useTheme } from "../shared/ThemeContext";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -70,7 +70,7 @@ export default function Index() {
   }, [user]);
 
   return (
-    <LinearGradient colors={theme.background} style={styles.container}>
+    <LinearGradient colors={theme.background as any} style={styles.container}>
       <View style={styles.content}>
         <Animated.View entering={FadeInDown.delay(100).duration(1000).springify()}>
           <Image

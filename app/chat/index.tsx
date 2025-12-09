@@ -26,8 +26,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { firestoreDb, storage } from "../../config/Firebaseconfig";
-import { AIChatModel } from "../shared/GlobalApi";
-import { useTheme } from "../shared/ThemeContext";
+import { AIChatModel } from "../../shared/GlobalApi";
+import { useTheme } from "../../shared/ThemeContext";
 
 type Message = {
   role: string;

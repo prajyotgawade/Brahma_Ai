@@ -6,7 +6,7 @@ import { MessageCircle } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Animated, Platform, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme } from "../shared/ThemeContext";
+import { useTheme } from "../../shared/ThemeContext";
 
 export default function History() {
   const { user } = useUser();

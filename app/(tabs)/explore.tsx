@@ -1,6 +1,6 @@
 import React from "react";
 import { Animated, Platform, StatusBar, StyleSheet, Text, View } from "react-native";
-import { useTheme } from "../shared/ThemeContext";
+import { useTheme } from "../../shared/ThemeContext";
 
 import AgentListComponent from "@/Components/Home/AgentListComponent";
 import CreateAgentBanner from "@/Components/Home/CreateAgentBanner";

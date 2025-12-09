@@ -1,8 +1,8 @@
-import { Agents } from "@/app/shared/AgentList";
 import { useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import React, { useMemo } from "react";
 import { FlatList, TouchableOpacity } from "react-native";
+import { Agents } from "../../shared/AgentList";
 import AgentCard from "./AgentCard";
 import NonFeaturedAgent from "./NonFeaturedAgent";
 
@@ -36,7 +36,7 @@ export default function AgentListComponent({ type }: Props) {
         agentId: item.id,
         chatId: chatId,
         lastModified: Date.now()
- // 👈 important
+        // 👈 important
       },
     });
   };

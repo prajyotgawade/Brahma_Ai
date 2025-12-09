@@ -13,7 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AgentListComponent from "../../Components/Home/AgentListComponent";
 import CreateAgentBanner from "../../Components/Home/CreateAgentBanner";
-import { useTheme } from "../shared/ThemeContext";
+import { useTheme } from "../../shared/ThemeContext";
 
 export default function Home() {
   const navigation = useNavigation();

@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme } from "./shared/ThemeContext";
+import { useTheme } from "../shared/ThemeContext";
 
 export default function ProScreen() {
   const router = useRouter();
