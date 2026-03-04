@@ -62,7 +62,7 @@ export default function Home() {
           </TouchableOpacity>
 
           {/* Title & Subtitle */}
-          <View style={styles.headerCenter}>
+          <View style={styles.headerCenter} pointerEvents="none">
             <Text style={[styles.headerTitle, { color: theme.textPrim }]}>Brahma AI</Text>
             <Text style={[styles.headerSubtitle, { color: theme.textSec }]}>Your AI Agent</Text>
           </View>
@@ -88,7 +88,7 @@ export default function Home() {
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: 130,
+            paddingTop: insets.top + 80,
             paddingBottom: 100 + insets.bottom
           }
         ]}
@@ -139,6 +139,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   headerCenter: {
+    position: "absolute",
+    left: 0,
+    right: 0,
     alignItems: "center",
   },
   headerTitle: {
